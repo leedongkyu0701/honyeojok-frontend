@@ -1,0 +1,50 @@
+"use client";
+
+import { useState } from "react";
+import { Star } from "lucide-react";
+
+type StarRatingProps = {
+  value: number; // 0~5
+  onChange: (value: number) => void;
+  max?: number; // default 5
+  disabled?: boolean;
+};
+
+export default function StarRating({
+  value,
+  onChange,
+  max = 5,
+  disabled = false,
+}: StarRatingProps) {
+  const [hoverValue, setHoverValue] = useState<number | null>(null);
+  const displayValue = hoverValue ?? value;
+
+  return (
+    <div className="flex items-center gap-1">
+      {Array.from({ length: max }, (_, i) => i + 1).map((star) => (
+        <button
+          key={star}
+          type="button"
+          disabled={disabled}
+          onMouseEnter={() => setHoverValue(star)}
+          onMouseLeave={() => setHoverValue(null)}
+          onClick={() => onChange(star)}
+          className="rounded-md p-1 disabled:cursor-not-allowed"
+          aria-label={`${star}점`}
+        >
+          <Star
+            className={[
+              "h-6 w-6 transition-transform",
+              !disabled ? "hover:scale-110" : "",
+              star <= displayValue
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-neutral-300",
+            ].join(" ")}
+          />
+        </button>
+      ))}
+
+      <span className="ml-2 text-sm text-neutral-500">{value} / {max}</span>
+    </div>
+  );
+}
