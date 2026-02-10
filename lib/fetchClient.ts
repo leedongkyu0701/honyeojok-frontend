@@ -3,7 +3,7 @@ import { parseApiError } from "./parseApiError";
 import { ApiError } from "./apiError";
 import { ErrorCode } from "@/types/error-code";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
 let refreshPromise: Promise<string> | null = null;
 
 async function runRefresh(): Promise<string> {
