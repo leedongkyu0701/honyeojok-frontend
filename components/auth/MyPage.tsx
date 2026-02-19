@@ -22,9 +22,9 @@ import { toast } from "sonner";
 import PostCard from "@/components/community/PostCard";
 import RouteCard from "@/components/trip-route/RouteCard";
 
-import type { ProfileVM } from "@/types/user";
-import type { TripRouteCardEntity } from "@/types/trip-routes";
-import type { PostCardVM } from "@/types/post";
+import type { ProfileResponse } from "@/types/user";
+import type { TripRouteCardResponse } from "@/types/trip-routes";
+import type { PostCardResponse } from "@/types/community";
 import {
   fetchMeApi,
   updateNickname,
@@ -35,7 +35,7 @@ import { logout as logoutServer } from "@/lib/api/auth/api";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
 
-const LIMIT = 10;
+const LIMIT = 8;
 
 type TabKey = "bookmarks" | "posts";
 
@@ -71,7 +71,7 @@ export default function MyPage() {
   }, [tab]);
 
   // ====== Me ======
-  const meQuery = useQuery<ProfileVM>({
+  const meQuery = useQuery<ProfileResponse>({
     queryKey: ["me"],
     queryFn: fetchMeApi,
     enabled: isAuthenticated,
@@ -104,7 +104,7 @@ export default function MyPage() {
 
   // ====== Posts ======
   const myPostsQuery = useQuery<{
-    posts: PostCardVM[];
+    posts: PostCardResponse[];
     totalPages: number;
   }>({
     queryKey: ["me", "posts", postPage, LIMIT],
@@ -116,7 +116,7 @@ export default function MyPage() {
 
   // ====== Bookmarks ======
   const myBookmarksQuery = useQuery<{
-    tripRoutes: TripRouteCardEntity[];
+    tripRoutes: TripRouteCardResponse[];
     totalPages: number;
   }>({
     queryKey: ["me", "bookmarks", bmPage, LIMIT],

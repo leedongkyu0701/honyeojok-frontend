@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchTripRoutesByRegion } from "@/lib/api/trip-route/api";
-import type { TripRouteCardEntity } from "@/types/trip-routes";
+import type { TripRouteCardResponse } from "@/types/trip-routes";
 
 import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
@@ -11,12 +11,12 @@ import EmptyState from "@/components/common/EmptyState";
 
 import RouteCard from "../trip-route/RouteCard";
 
-export default function RegionTripRoute({ region }: { region: string }) {
+export default function TripRouteView({ region }: { region: string }) {
   const {
     data: tripRoutes,
     isLoading,
     isError,
-  } = useQuery<TripRouteCardEntity[]>({
+  } = useQuery<TripRouteCardResponse[]>({
     queryKey: ["trip-routes", region],
     queryFn: () => fetchTripRoutesByRegion(region),
   });

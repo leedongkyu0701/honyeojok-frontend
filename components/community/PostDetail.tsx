@@ -1,8 +1,12 @@
 "use client";
 
-import { fetchPostDetail, deletePost } from "@/lib/api/community/api";
+import {
+  fetchPostDetail,
+  deletePost,
+  incrementPostViewCount,
+} from "@/lib/api/community/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { PostDetailVM } from "@/types/post";
+import type { PostDetailResponse } from "@/types/community";
 import { useRouter } from "next/navigation";
 import PostImageCarousel from "./PostImageCarousel";
 
@@ -18,16 +22,45 @@ import CommentsSection from "./CommentsSection";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { timeAgoOrDate } from "@/lib/timeAgo";
+import { useEffect } from "react";
+
+function typeLabel(t: PostDetailResponse["type"]) {
+  if (t === "REVIEW") return "리뷰";
+  if (t === "QUESTION") return "질문";
+  return "자유";
+}
+
+function typeBadgeClass(t: PostDetailResponse["type"]) {
+  if (t === "REVIEW")
+    return "bg-emerald-50 text-emerald-700 border-emerald-100";
+  if (t === "QUESTION") return "bg-indigo-50 text-indigo-700 border-indigo-100";
+  return "bg-neutral-50 text-neutral-700 border-neutral-200";
+}
 
 export default function PostDetail({ id }: { id: number }) {
   const {
     data: postDetail,
     isLoading,
     isError,
-  } = useQuery<PostDetailVM>({
+  } = useQuery<PostDetailResponse>({
     queryKey: ["post", id],
     queryFn: () => fetchPostDetail(id),
+    staleTime: 10_000,
+    refetchOnWindowFocus: false,
   });
+
+  useEffect(() => {
+    if (!id) return;
+
+    const key = `viewed_post_session_${id}`;
+    if (sessionStorage.getItem(key) === "1") return;
+
+    sessionStorage.setItem(key, "1");
+
+    incrementPostViewCount(id).catch(() => {});
+  }, [id]);
 
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -57,7 +90,7 @@ export default function PostDetail({ id }: { id: number }) {
     },
   });
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     const ok = confirm("정말 삭제할까요?");
     if (!ok) return;
     deleteMutation.mutate();
@@ -91,7 +124,9 @@ export default function PostDetail({ id }: { id: number }) {
     );
   }
 
-  const created = new Date(postDetail.createdAt).toLocaleDateString();
+  const nickName = postDetail.nickName ?? "익명";
+  const createdText = timeAgoOrDate(postDetail.createdAt);
+
 
   return (
     <div className="space-y-6">
@@ -100,17 +135,48 @@ export default function PostDetail({ id }: { id: number }) {
         <CardContent className="space-y-5 p-5">
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 space-y-2">
+            <div className="min-w-0 space-y-3">
+              {/* 타입 + 시간 + 조회/좋아요 */}
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full border px-2 py-0.5 font-medium",
+                    typeBadgeClass(postDetail.type),
+                  )}
+                >
+                  {typeLabel(postDetail.type)}
+                </span>
+
+                <span className="text-neutral-400">·</span>
+                <span className="text-neutral-600">{createdText}</span>
+
+
+                <span className="text-neutral-300">·</span>
+                <span className="inline-flex items-center gap-1 text-neutral-500">
+                  👀 {postDetail.viewCount}
+                </span>
+                <span className="inline-flex items-center gap-1 text-neutral-500">
+                  ❤️ {postDetail.likeCount}
+                </span>
+              </div>
+
+              {/* 제목 */}
               <h1 className="text-xl font-bold leading-snug text-neutral-900 md:text-2xl">
                 {postDetail.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500">
-                <Badge>{postDetail.region ?? "지역 미정"}</Badge>
-                <span className="text-neutral-300">·</span>
-                <span>{created}</span>
-                <span className="text-neutral-300">·</span>
-                <span className="truncate">작성자 {postDetail.nickName}</span>
+              {/* 작성자 + 지역 */}
+              <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-600">
+                <span className="truncate">
+                  <span className="text-neutral-400">by.</span> {nickName}
+                </span>
+
+                {postDetail.region ? (
+                  <>
+                    <span className="text-neutral-300">·</span>
+                    <Badge className="rounded-full">{postDetail.region}</Badge>
+                  </>
+                ) : null}
               </div>
             </div>
 

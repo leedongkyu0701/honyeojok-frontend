@@ -1,19 +1,21 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import DestinationCard from "../destination/DestinationCard";
-import type { DestinationCardVM } from "@/types/destinations";
+import type { DestinationCardResponse } from "@/types/destinations";
 import { fetchRecommendedDestinations } from "@/lib/api/destination/api";
+
 import Link from "next/link";
 import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
 import Button from "@/components/common/Button";
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
-import HorizontalRail from "@/components/common/HorizontalRail";
+
+import HomeCarouselRail from "@/components/common/HomeCarouselRail";
+import MainDestinationCard from "@/components/destination/DestinationMainCard";
 
 export default function BestDestinationSection() {
-  const { data, isLoading, isError } = useQuery<DestinationCardVM[]>({
+  const { data, isLoading, isError } = useQuery<DestinationCardResponse[]>({
     queryKey: ["destinations", "recommended"],
     queryFn: fetchRecommendedDestinations,
   });
@@ -34,11 +36,11 @@ export default function BestDestinationSection() {
         />
 
         {isLoading ? (
-          <HorizontalRail itemClassName="w-[85%] sm:w-[48%] md:w-[40%] lg:w-[24%]">
+          <HomeCarouselRail itemClassName="w-[85%] sm:w-[48%] md:w-[40%] lg:w-[24%]">
             {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-48 w-full" />
+              <Skeleton key={index} className="h-56 w-full rounded-2xl" />
             ))}
-          </HorizontalRail>
+          </HomeCarouselRail>
         ) : null}
 
         {isError || data?.length === 0 ? (
@@ -49,11 +51,11 @@ export default function BestDestinationSection() {
         ) : null}
 
         {!isLoading && !isError && data && data.length > 0 ? (
-          <HorizontalRail itemClassName="w-[85%] sm:w-[48%] md:w-[40%] lg:w-[24%]">
+          <HomeCarouselRail itemClassName="w-[85%] sm:w-[48%] md:w-[40%] lg:w-[24%]">
             {data.map((destination) => (
-              <DestinationCard key={destination.id} destination={destination} />
+              <MainDestinationCard key={destination.id} destination={destination} />
             ))}
-          </HorizontalRail>
+          </HomeCarouselRail>
         ) : null}
       </Container>
     </section>

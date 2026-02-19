@@ -5,8 +5,8 @@ import Container from "@/components/common/Container";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "커뮤니티 | Honyeo",
-  description: "혼자 여행하는 사람들을 위한 여행 정보 커뮤니티",
+  title: "커뮤니티 | 혼여족",
+  description: "혼여족을 위한 여행 정보 커뮤니티",
 };
 
 export default function CommunityPage() {

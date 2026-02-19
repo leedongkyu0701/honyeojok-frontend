@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchTripRouteDetail } from "@/lib/api/trip-route/api";
-import type { TripRouteDetailEntity } from "@/types/trip-routes";
+import type { TripRouteDetailResponse } from "@/types/trip-routes"; // ✅ 변경
 
 import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
@@ -18,19 +18,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
+import { useAuthStore } from "@/stores/auth.store";
 
 const DynamicTripRouteMap = dynamic(() => import("../Map/TripRouteMap"), {
   ssr: false,
 });
 
-
-const TYPE_LABEL: Record<string, string> = {
-  spot: "명소",
-  food: "맛집",
-  cafe: "카페",
-  stay: "숙소",
-  activity: "액티비티",
-};
 
 export default function TripRouteDetail({
   region,
@@ -39,18 +32,22 @@ export default function TripRouteDetail({
   region: string;
   slug: string;
 }) {
+  const authInitialized = useAuthStore((s) => s.authInitialized); // ✅ authInitialized 상태 가져오기
   const {
     data: route,
     isLoading,
     isError,
-  } = useQuery<TripRouteDetailEntity>({
+  } = useQuery<TripRouteDetailResponse>({ // ✅ 변경
     queryKey: ["trip-route", region, slug],
     queryFn: () => fetchTripRouteDetail(region, slug),
+    enabled: authInitialized, // ✅ authInitialized가 true일 때만 쿼리 실행
   });
 
+  // console.log("Fetched trip route detail:", route); // ✅ 디버깅용 로그
   const queryClient = useQueryClient();
   const router = useRouter();
 
+  // ✅ 북마크 로직 그대로 (절대 수정 안 함)
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
       return await addBookmarkTripRoute(slug);
@@ -60,13 +57,13 @@ export default function TripRouteDetail({
         queryKey: ["trip-route", region, slug],
       });
 
-      const previousRoute = queryClient.getQueryData<TripRouteDetailEntity>([
+      const previousRoute = queryClient.getQueryData<TripRouteDetailResponse>([
         "trip-route",
         region,
         slug,
       ]);
 
-      queryClient.setQueryData<TripRouteDetailEntity>(
+      queryClient.setQueryData<TripRouteDetailResponse>(
         ["trip-route", region, slug],
         (oldRoute) => {
           if (!oldRoute) return oldRoute;
@@ -88,18 +85,18 @@ export default function TripRouteDetail({
       }
     },
     onSuccess: (data) => {
-      queryClient.setQueryData<TripRouteDetailEntity>(
+      queryClient.setQueryData<TripRouteDetailResponse>(
         ["trip-route", region, slug],
         (oldRoute) => {
           if (!oldRoute) return oldRoute;
           return {
             ...oldRoute,
-            bookmarkedByMe: data.bookmarked,
+            bookmarkedByMe: data.bookmarked, 
             bookmarkCount: data.bookmarkCount,
           };
         },
       );
-      router.push("/auth");
+      router.push("/auth"); // ✅ 로직 유지(요청대로 손대지 않음)
     },
   });
 
@@ -115,15 +112,13 @@ export default function TripRouteDetail({
 
   const [activeDay, setActiveDay] = useState<number>(1);
 
-  // route가 바뀌었을 때 1일차로 초기화
-  // (state는 사용자 탭을 위해 필요)
   const activeDayEntity = useMemo(() => {
     if (!daysPlanSorted.length) return null;
     const found = daysPlanSorted.find((d) => d.dayNumber === activeDay);
     return found ?? daysPlanSorted[0];
   }, [daysPlanSorted, activeDay]);
 
-  if (isLoading) {
+  if (isLoading || !authInitialized) {
     return (
       <div className="py-10">
         <Container className="space-y-6">
@@ -165,6 +160,8 @@ export default function TripRouteDetail({
 
   const tags = route.tags ?? [];
   const totalDays = route.days;
+
+  // ✅ 북마크 로직 그대로
   const handleSaveRoute = () => {
     if (route.bookmarkedByMe) {
       router.push("/auth");
@@ -172,6 +169,18 @@ export default function TripRouteDetail({
     }
     bookmarkMutation.mutate();
   };
+
+    const honyeoCostLabel = (() => {
+    const cost = route.honyeoCost; // number | null | undefined (원 단위)
+    if (!cost || cost <= 0) return null;
+
+    // 만원 단위 표기 (정수면 "10만원", 소수면 "12.5만원" 느낌)
+    const man = cost / 10000;
+    const manText =
+      Number.isInteger(man) ? `${man}` : man.toFixed(1).replace(/\.0$/, "");
+    return `약 ${manText}만원`;
+  })();
+
 
   return (
     <div className="py-10">
@@ -187,6 +196,13 @@ export default function TripRouteDetail({
           <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1">
             {totalDays}일 코스
           </span>
+
+          {honyeoCostLabel ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-yellow-400 bg-yellow-50 px-3 py-1 text-yellow-600">
+              {honyeoCostLabel}
+            </span>
+          ) : null}
+
           <BookmarkButton
             region={region}
             slug={route.slug}
@@ -261,6 +277,9 @@ export default function TripRouteDetail({
 
                   <div className="mt-4 space-y-3">
                     {activeDayEntity.items.map((item) => {
+                      // ✅ DTO 기준 nullable 처리
+                      const hasTime = item.startTime || item.endTime;
+                      const hasSpotLink = !!item.spot?.id; // slug는 dto에 있지만 링크는 id로만도 가능
 
                       return (
                         <div
@@ -276,7 +295,7 @@ export default function TripRouteDetail({
                           {item.imageUrl ? (
                             <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
                               <Image
-                                src={`${item.imageUrl}`}
+                                src={item.imageUrl}
                                 alt={item.title}
                                 fill
                                 className="object-cover"
@@ -289,17 +308,24 @@ export default function TripRouteDetail({
                           <div className="min-w-0 flex-1 space-y-2">
                             {/* 제목 라인 */}
                             <div className="flex flex-wrap items-center gap-2">
-                              <Badge className="rounded-full px-2 py-0.5 text-xs">
-                                {TYPE_LABEL[item.type] ?? item.type}
-                              </Badge>
-
+                              {/* ✅ type 뱃지 제거 (DTO에 없음) */}
                               <div className="truncate text-sm font-semibold">
                                 {item.title}
                               </div>
 
                               <div className="text-xs text-neutral-400">
-                                추천 {item.recommendedLevel}/5
+                                혼여 - 추천레벨 {item.recommendedLevel}/5
                               </div>
+
+                              {/* ✅ spot 연결된 경우(있으면) 스팟 보기 */}
+                              {hasSpotLink ? (
+                                <a
+                                  href={`/spots/${region}/${item.spot!.id}`}
+                                  className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2 py-0.5 text-[11px] text-neutral-600 hover:bg-neutral-50"
+                                >
+                                  상세 보기 →
+                                </a>
+                              ) : null}
                             </div>
 
                             {/* 설명 */}
@@ -311,11 +337,10 @@ export default function TripRouteDetail({
 
                             {/* 메타 */}
                             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500">
-                              {item.address ? (
-                                <span>📍 {item.address}</span>
-                              ) : null}
+                              {/* ✅ address는 DTO에서 string (필수) */}
+                              <span>📍 {item.address}</span>
 
-                              {item.startTime || item.endTime ? (
+                              {hasTime ? (
                                 <span>
                                   ⏱ {item.startTime ?? "?"} ~{" "}
                                   {item.endTime ?? "?"}
@@ -333,6 +358,13 @@ export default function TripRouteDetail({
                                 </a>
                               ) : null}
                             </div>
+
+                            {/* ✅ 이미지 크레딧(있으면) */}
+                            {item.imageCredit ? (
+                              <div className="text-[11px] text-neutral-400">
+                                {item.imageCredit}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       );

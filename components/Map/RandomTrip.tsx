@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import type { DestinationMapVM } from "@/types/destinations";
+import type { DestinationMapResponse } from "@/types/destinations";
 import { fetchDestinationMapData } from "@/lib/api/destination/api";
 import { useQuery } from "@tanstack/react-query";
 import Container from "@/components/common/Container";
@@ -17,13 +17,13 @@ const RandomMap = dynamic(() => import("@/components/Map/RandomMap"), {
 });
 
 export default function RandomTrip() {
-  const [randomPoint, setRandomPoint] = useState<DestinationMapVM | null>(null);
+  const [randomPoint, setRandomPoint] = useState<DestinationMapResponse | null>(null);
 
   const {
     data: destinationMapPoints,
     isLoading,
     isError,
-  } = useQuery<DestinationMapVM[]>({
+  } = useQuery<DestinationMapResponse[]>({
     queryKey: ["destinations", "map"],
     queryFn: fetchDestinationMapData,
     staleTime: 1000 * 60 * 5, // 5분 fresh

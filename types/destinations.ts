@@ -1,18 +1,41 @@
-import type { TripRouteCardEntity } from "./trip-routes";
-import type { SpotCardVM } from "./spots";
+import type { TripRouteCardResponse } from "./trip-routes";
+import type { SpotCardResponse } from "./spots";
+import type { TagResponse } from "./tag";
+import type { ProvinceGroup } from "./util";
+import type { ImageSource } from "./util";
 
-export type DestinationEntity = {
+export type DestinationCardResponse = {
   id: number;
   slug: string;
   name: string;
-
   score: number;
-  imageUrl: string;
-  imageSource?: ImageSource;
-  imageCredit?: string;
+  summary: string;
+  imageUrl: string | null;
+};
 
+export type DestinationMapResponse = {
+  id: number;
+  slug: string;
+  name: string;
+  summary: string;
   latitude: number;
   longitude: number;
+  score: number;
+};
+
+export type DestinationDetailResponse = {
+  id: number;
+  slug: string;
+  name: string;
+  province: ProvinceGroup;
+  score: number;
+
+  imageUrl: string | null;
+  imageSource: ImageSource | null;
+  imageCredit: string | null;
+
+  summary: string;
+  description: string;
 
   difficulty: {
     food: number;
@@ -21,60 +44,13 @@ export type DestinationEntity = {
     loneliness: number;
   };
 
-  summary: string; 
-  reviewCount: number;
-  rank?: number;
+  tags: TagResponse[];
+  routes: TripRouteCardResponse[];
+  spots: SpotCardResponse[];
 };
 
-
-
-export type DestinationCardVM = Pick<
-  DestinationEntity,
-  "id" | "slug" | "name" | "score" | "imageUrl" | "summary"
->;
-
-
-export type DestinationMapVM = Pick<
-  DestinationEntity,
-  "id" | "slug" | "name" | "latitude" | "longitude" | "score"
-> ;
-
-
-export type DestinationDetailVM = Pick<
-  DestinationEntity,
-  | "id"
-  | "slug"
-  | "name"
-  | "score"
-  | "imageUrl"
-  | "difficulty"
-  | "summary"
-  | "imageSource"
-  | "imageCredit"
-> & {
-  routes: TripRouteCardEntity[];
-  spots: SpotCardVM[];
+export type DestinationSearchResponse = {
+  id: number;
+  slug: string;
+  name: string;
 };
-
-export type DestinationFindByQueryVM = Pick<
-  DestinationEntity,
-  "id" | "slug" | "name"
->;
-
-export enum ProvinceGroup {
-  SEOUL_GYEONGGI = "SEOUL_GYEONGGI",
-  GANGWON = "GANGWON",
-  CHUNGCHEONG = "CHUNGCHEONG",
-  JEOLLA = "JEOLLA",
-  GYEONGSANG = "GYEONGSANG",
-  JEJU = "JEJU",
-}
-
-export enum ImageSource {
-  UNSPLASH = 'UNSPLASH',
-  KTO = 'KTO', // 한국관광공사
-  OWNER = 'OWNER', // 업체/사장님 제공
-  USER = 'USER', // 유저 업로드
-  ETC = 'ETC',
-}
-

@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { CommentEntity } from "@/types/post";
+import type { CommentResponse } from "@/types/community";
 import { fetchComments, createComment, deleteComment } from "@/lib/api/community/api";
 
 import Button from "@/components/common/Button";
@@ -20,20 +20,21 @@ function formatKoreanDate(iso: string) {
 export default function CommentsSection({ postId }: { postId: number }) {
   const qc = useQueryClient();
 
-  const [replyTo, setReplyTo] = useState<number | null>(null); // 답글 다는 대상 댓글 ID
-  const [commentValue, setCommentValue] = useState(""); // 최상위 댓글 입력값 (답글 아닐시)
-  const [replyValue, setReplyValue] = useState(""); // 답글 입력값
+  const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [commentValue, setCommentValue] = useState("");
+  const [replyValue, setReplyValue] = useState("");
+  const replyFormRef = useRef<HTMLDivElement | null>(null);
 
-  const replyFormRef = useRef<HTMLDivElement | null>(null); // 답글 폼 스크롤용
-
-  const commentsQuery = useQuery<CommentEntity[]>({
+  const commentsQuery = useQuery<CommentResponse[]>({
     queryKey: ["comments", postId],
     queryFn: () => fetchComments(postId),
+    staleTime: 10_000,
+    refetchOnWindowFocus: false,
   });
 
   const createMutation = useMutation({
     mutationFn: (payload: { content: string; parentId: number | null }) =>
-      createComment(postId, payload.content, payload.parentId),
+      createComment(postId, payload),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["comments", postId] });
       setCommentValue("");
@@ -49,9 +50,7 @@ export default function CommentsSection({ postId }: { postId: number }) {
     },
   });
 
-  const comments = useMemo(() => {
-    return commentsQuery.data || [];
-  }, [commentsQuery.data]);
+  const comments = useMemo(() => commentsQuery.data ?? [], [commentsQuery.data]);
 
   const totalCount = useMemo(() => {
     let count = 0;
@@ -135,7 +134,6 @@ export default function CommentsSection({ postId }: { postId: number }) {
             submitLabel="등록"
             isSubmitting={createMutation.isPending}
           />
-          
         </CardContent>
       </Card>
 
@@ -155,7 +153,7 @@ export default function CommentsSection({ postId }: { postId: number }) {
                 onDelete={c.isDeleted ? undefined : () => confirmDelete(c.id)}
               />
 
-              {/* 답글 폼: 부모 댓글 바로 아래 */}
+              {/* 답글 폼 */}
               {replyTo === c.id ? (
                 <div
                   ref={replyFormRef}
@@ -190,7 +188,6 @@ export default function CommentsSection({ postId }: { postId: number }) {
                       isDeleted={child.isDeleted}
                       isChild
                       onDelete={child.isDeleted ? undefined : () => confirmDelete(child.id)}
-                      // 대댓글 1단계 정책: 답글 버튼 없음
                     />
                   ))}
                 </div>

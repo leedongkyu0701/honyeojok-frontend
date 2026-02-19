@@ -1,9 +1,9 @@
 import Container from "@/components/common/Container";
 
 const labels = {
-  food: "식당 접근성",
+  food: "혼밥/술 난이도",
   transport: "이동 난이도",
-  safety: "안전 지수",
+  safety: "혼여 안전성",
   loneliness: "외로움 지수",
 };
 

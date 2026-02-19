@@ -2,7 +2,7 @@
 
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import type { DestinationMapVM } from "@/types/destinations";
+import type { DestinationMapResponse } from "@/types/destinations";
 import Link from "next/link";
 import L from "leaflet";
 import { useEffect } from "react";
@@ -13,7 +13,7 @@ const iconUrl = "/leaflet/marker-icon.png";
 const shadowUrl = "/leaflet/marker-shadow.png";
 
 type Props = {
-  destination: DestinationMapVM | null;
+  destination: DestinationMapResponse | null;
 };
 
 export default function DestinationMap({ destination }: Props) {
@@ -73,8 +73,7 @@ export default function DestinationMap({ destination }: Props) {
               position={[destination.latitude, destination.longitude]}
             >
               <Popup>
-                <div className="w-56 space-y-3">
-                  {/* 제목/별점 */}
+                <div className="w-64 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-neutral-900">
@@ -86,16 +85,18 @@ export default function DestinationMap({ destination }: Props) {
                       </div>
                     </div>
 
-                    {/* 작은 뱃지 느낌 */}
                     <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 text-[11px] text-neutral-700">
-                      지역
+                      랜덤 픽
                     </span>
                   </div>
 
-                  {/* 구분선 */}
+                  {/* ✅ summary 추가 */}
+                  <p className="line-clamp-2 text-xs text-neutral-600">
+                    {destination.summary}
+                  </p>
+
                   <div className="h-px w-full bg-neutral-200" />
 
-                  {/* CTA 버튼 */}
                   <Link href={`/destinations/${destination.slug}`}>
                     <Button variant="secondary" size="sm" className="w-full">
                       여행지 상세보기
@@ -107,6 +108,14 @@ export default function DestinationMap({ destination }: Props) {
           </>
         )}
       </MapContainer>
+      {/* ✅ 아무것도 선택 안 된 상태 안내(지도 위) */}
+      {!destination ? (
+        <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
+          <div className="rounded-full bg-white/80 px-3 py-1 text-xs text-neutral-700 shadow ring-1 ring-black/5 backdrop-blur">
+            버튼을 눌러 랜덤 여행지를 뽑아보세요 👆
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
-import type { DestinationDetailVM } from "@/types/destinations";
+import type { DestinationDetailResponse } from "@/types/destinations";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDestinationDetail } from "@/lib/api/destination/api";
 import RegionHero from "./RegionHero";
 import DifficultyBars from "@/components/region/DifficultyBars";
 import RegionTabs from "@/components/region/RegionTabs";
-import RecommendedRoutes from "@/components/region/RecommendedRoutes";
-import SoloSpots from "@/components/region/SoloSpots";
+import RegionRoutes from "@/components/region/RegionRoutes";
+import RegionSpots from "./RegionSpots";
 import Container from "@/components/common/Container";
 import EmptyState from "@/components/common/EmptyState";
 import Skeleton from "@/components/common/Skeleton";
@@ -17,7 +17,7 @@ export default function RegionDetailPage({ region }: { region: string }) {
     data: regionDetail,
     isLoading,
     isError,
-  } = useQuery<DestinationDetailVM>({
+  } = useQuery<DestinationDetailResponse>({
     queryKey: ["destinations", region],
     queryFn: () => fetchDestinationDetail(region),
   });
@@ -68,14 +68,13 @@ export default function RegionDetailPage({ region }: { region: string }) {
             {
               label: "장소",
               value: "spots",
-              content: <SoloSpots spots={regionDetail.spots} />,
+              content: <RegionSpots spots={regionDetail.spots} />,
             },
             {
               label: "루트",
               value: "routes",
               content: (
-                <RecommendedRoutes
-                  region={region}
+                <RegionRoutes
                   routes={regionDetail.routes}
                 />
               ),

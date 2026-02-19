@@ -1,24 +1,53 @@
 import { fetchClient } from "@/lib/fetchClient";
-import type { PostCardVM } from "@/types/post";
-import type { PostDetailVM } from "@/types/post";
-import type { CommentEntity } from "@/types/post";
 import { parseApiError } from "@/lib/parseApiError";
+import type {
+  PostCardResponse,
+  PostDetailResponse,
+  PostType,
+  CommentResponse,
+} from "@/types/community";
+
+export type PostListResponse<T> = {
+  posts: T[];
+  totalPages: number;
+};
+
+export type FindPostsParams = {
+  page?: number | null;
+  take?: number | null;
+  type?: PostType | null;
+  q?: string | null;
+};
 
 export async function fetchPosts(
-  page: number,
-  type?: string,
-  searchTerm?: string,
-): Promise<{ posts: PostCardVM[]; totalPages: number }> {
-  const response = await fetchClient(
-    `/posts?page=${page}${type ? `&type=${type}` : ""}${searchTerm ? `&q=${searchTerm}` : ""}`,{
-      skipAuth: true,
-    }
-  );
+  params: FindPostsParams = {},
+): Promise<PostListResponse<PostCardResponse>> {
+  const qs = new URLSearchParams();
+
+  if (params.page != null) qs.append("page", String(params.page));
+  if (params.take != null) qs.append("take", String(params.take));
+  if (params.type) qs.append("type", params.type);
+  if (params.q) qs.append("q", params.q);
+  
+  const response = await fetchClient(`/posts${qs.toString() ? `?${qs}` : ""}`, {
+    skipAuth: true,
+    withCredentials: false,
+  });
+
   await parseApiError(response);
   return response.json();
 }
 
-export async function fetchBestPosts(): Promise<PostCardVM[]> {
+export async function incrementPostViewCount(postId: number): Promise<void> {
+  const response = await fetchClient(`/posts/${postId}/view`, {
+    method: "POST",
+    skipAuth: true,
+    withCredentials: false,
+  });
+  await parseApiError(response);
+}
+
+export async function fetchBestPosts(): Promise<PostCardResponse[]> {
   const response = await fetchClient(`/posts/best`, {
     skipAuth: true,
     withCredentials: false,
@@ -29,21 +58,26 @@ export async function fetchBestPosts(): Promise<PostCardVM[]> {
 
 export async function fetchPostsByRegionSlug(
   regionSlug: string,
-): Promise<PostCardVM[]> {
-  const response = await fetchClient(`/posts/region/${regionSlug}`, {
-    skipAuth: true,
-  });
+): Promise<PostCardResponse[]> {
+  const response = await fetchClient(
+    `/posts/region/${encodeURIComponent(regionSlug)}`,
+    {
+      skipAuth: true,
+      withCredentials: false,
+    },
+  );
   await parseApiError(response);
   return response.json();
 }
 
-export async function fetchPostDetail(postId: number): Promise<PostDetailVM> {
+export async function fetchPostDetail(postId: number): Promise<PostDetailResponse> {
   const response = await fetchClient(`/posts/${postId}`);
   await parseApiError(response);
   return response.json();
 }
 
-export async function createPost(formData: FormData): Promise<PostCardVM> {
+
+export async function createPost(formData: FormData): Promise<PostCardResponse> {
   const response = await fetchClient("/posts", {
     method: "POST",
     body: formData,
@@ -59,9 +93,9 @@ export async function deletePost(postId: number): Promise<void> {
   await parseApiError(response);
 }
 
-export async function likePost(
-  postId: number,
-): Promise<{ liked: boolean; likeCount: number }> {
+export type LikePostResponse = { liked: boolean; likeCount: number };
+
+export async function likePost(postId: number): Promise<LikePostResponse> {
   const response = await fetchClient(`/posts/${postId}/like`, {
     method: "POST",
   });
@@ -69,23 +103,25 @@ export async function likePost(
   return response.json();
 }
 
-export async function fetchComments(postId: number): Promise<CommentEntity[]> {
+export async function fetchComments(postId: number): Promise<CommentResponse[]> {
   const response = await fetchClient(`/posts/${postId}/comments`);
   await parseApiError(response);
   return response.json();
 }
 
+export type CreateCommentBody = {
+  content: string;
+  parentId?: number | null;
+};
+
 export async function createComment(
   postId: number,
-  content: string,
-  parentId: number | null = null,
-): Promise<CommentEntity> {
+  body: CreateCommentBody,
+): Promise<CommentResponse> {
   const response = await fetchClient(`/posts/${postId}/comments`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ content, parentId }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
   await parseApiError(response);
   return response.json();
@@ -96,5 +132,4 @@ export async function deleteComment(commentId: number): Promise<void> {
     method: "DELETE",
   });
   await parseApiError(response);
-  return response.json();
 }

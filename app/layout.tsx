@@ -8,15 +8,20 @@ import AuthProvider from "./providers/authProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  ),
   title: {
-    default: 'Honyeo',
-    template: '%s | Honyeo',
+    default: "혼여족",
+    template: "%s | 혼여족",
   },
-  description: '혼자 여행하는 사람들을 위한 여행 정보 커뮤니티',
+  description: "혼자 여행하는 사람들을 위한 여행 정보 커뮤니티",
   openGraph: {
-    title: 'Honyeo',
-    description: '혼자 떠날 여행지와 여행 정보를 공유받으세요 !',
-    images: ['/og.png'],
+    title: "혼여족",
+    url: process.env.NEXT_PUBLIC_SITE_URL,
+    siteName: "혼여족",
+    description: "홀로 어디론가 떠나고 싶을때, 혼여족",
+    images: ["/og.png"],
   },
 };
 

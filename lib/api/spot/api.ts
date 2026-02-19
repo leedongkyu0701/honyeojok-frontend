@@ -1,53 +1,70 @@
-import type { SpotEntity } from "@/types/spots";
+import type {
+  SpotCardResponse,
+  SpotDetailResponse,
+  FindHotSpotsResponse,
+  SpotCategory,
+} from "@/types/spots";
 import { fetchClient } from "@/lib/fetchClient";
-import type { SpotCardVM } from "@/types/spots";
 import { parseApiError } from "@/lib/parseApiError";
 
-export type HotSpotsResponse = {
-  healing: SpotCardVM[];
-  foodie: SpotCardVM[];
-  activity: SpotCardVM[];
-  honsool: SpotCardVM[];
-  cafe: SpotCardVM[];
+export type SpotListResponse<T> = {
+  data: T[];
+  totalPages: number;
+};
+
+// 1) 상세
+export async function fetchSpotDetail(id: number): Promise<SpotDetailResponse> {
+  const response = await fetchClient(`/spots/${id}`, {
+    skipAuth: true,
+    withCredentials: false,
+  });
+  await parseApiError(response);
+  return response.json();
 }
 
-
-export async function fetchSpotDetail(id: number): Promise<SpotEntity> {
-    const response = await fetchClient(`/spots/${id}`,{
-      skipAuth: true,
-    });
-    await parseApiError(response);
-    return response.json();
+// 2) 핫스팟 묶음
+export async function fetchHotSpots(): Promise<FindHotSpotsResponse> {
+  const response = await fetchClient(`/spots/hot`, {
+    skipAuth: true,
+    withCredentials: false,
+  });
+  await parseApiError(response);
+  return response.json();
 }
 
-export async function fetchHotSpots(): Promise<HotSpotsResponse> {
-    const response = await fetchClient(`/spots/hot`,{
-      skipAuth: true,
-      withCredentials: false,
-    });
-    await parseApiError(response);
-    return response.json();
+// 3) 추천 스팟 (카드 배열)
+export async function fetchRecommendedSpots(): Promise<SpotCardResponse[]> {
+  const response = await fetchClient(`/spots/recommended`, {
+    skipAuth: true,
+    withCredentials: false,
+  });
+  await parseApiError(response);
+  return response.json();
 }
 
-export async function fetchRecommendedSpots(): Promise<SpotCardVM[]> {
-    const response = await fetchClient(`/spots/recommended`,{
-      skipAuth: true,
-      withCredentials: false,
-    });
-    await parseApiError(response);
-    return response.json();
-}
+// 4) 지역별 스팟 리스트
+export async function fetchSpotsByRegion(
+  region: string,
+  params: {
+    category?: SpotCategory | null;
+    page?: number;
+    take?: number;
+  } = {},
+): Promise<SpotListResponse<SpotCardResponse>> {
+  const query = new URLSearchParams();
 
-export async function fetchSpotsByRegion(tag: string | null, page: number, region: string): Promise<{ data: SpotCardVM[]; totalPages: number; }> {
-    const queryParams = new URLSearchParams();
-    if (tag) {
-        queryParams.append('tag', tag);
-    }
-    queryParams.append('page', page.toString());
+  if (params.category) query.append("category", params.category);
 
-    const response = await fetchClient(`/spots/region/${region}?${queryParams.toString()}`,{    
-        skipAuth: true,
-    });
-    await parseApiError(response);
-    return response.json();
+  if (params.page != null) query.append("page", String(params.page));
+  if (params.take != null) query.append("take", String(params.take));
+
+  const qs = query.toString();
+
+  const response = await fetchClient(
+    `/spots/region/${encodeURIComponent(region)}${qs ? `?${qs}` : ""}`,
+    { skipAuth: true },
+  );
+
+  await parseApiError(response);
+  return response.json();
 }

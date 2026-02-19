@@ -1,10 +1,10 @@
 import { fetchClient } from "@/lib/fetchClient";
-import type { ProfileVM } from "@/types/user";
-import type { TripRouteCardEntity } from "@/types/trip-routes";
-import type { PostCardVM } from "@/types/post";
+import type { ProfileResponse } from "@/types/user";
+import type { TripRouteCardResponse } from "@/types/trip-routes";
+import type { PostCardResponse } from "@/types/community";
 import { parseApiError } from "@/lib/parseApiError";
 
-export async function fetchMeApi(): Promise<ProfileVM> {
+export async function fetchMeApi(): Promise<ProfileResponse> {
   const response = await fetchClient("/users/me");
   await parseApiError(response);
   return response.json();
@@ -24,10 +24,10 @@ export async function updateNickname(nickName: string) {
 
 export async function getMyBookmarks(
   page: number,
-  limit: number,
-): Promise<{ tripRoutes: TripRouteCardEntity[]; totalPages: number }> {
+  take: number,
+): Promise<{ tripRoutes: TripRouteCardResponse[]; totalPages: number }> {
   const response = await fetchClient(
-    `/users/me/bookmarks?page=${page}&limit=${limit}`,
+    `/users/me/bookmarks?page=${page}&take=${take}`,
   );
   await parseApiError(response);
   return response.json();
@@ -35,10 +35,10 @@ export async function getMyBookmarks(
 
 export async function getMyPosts(
   page: number,
-  limit: number,
-): Promise<{ posts: PostCardVM[]; totalPages: number }> {
+  take: number,
+): Promise<{ posts: PostCardResponse[]; totalPages: number }> {
   const response = await fetchClient(
-    `/users/me/posts?page=${page}&limit=${limit}`,
+    `/users/me/posts?page=${page}&take=${take}`,
   );
   await parseApiError(response);
   return response.json();

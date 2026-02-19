@@ -1,40 +1,65 @@
-export type SpotTag = {
-  slug: string;
-  label: string;
-};
+import type { TagResponse } from "./tag";
+import type { ImageSource } from "./util";
 
-export type SpotDestination = {
+export enum SpotCategory {
+  FOOD = "food",
+  CAFE = "cafe",
+  DRINK = "drink",
+  ACTIVITY = "activity",
+  NATURE = "nature",
+  ETC = "etc",
+}
+
+export type SpotDestinationResponse = {
+  id: number;
   slug: string;
   name: string;
 };
 
-import { ImageSource } from "./destinations";
-
-export type SpotEntity = {
+export type SpotCardResponse = {
   id: number;
   slug: string;
   name: string;
 
-  note?: string | null;
+  summary: string;
+  category: SpotCategory;
+  imageUrl: string | null;
+
+  lat: number | null;
+  lng: number | null;
+
+  tags: TagResponse[];
+  destination: SpotDestinationResponse;
+};
+
+export type SpotDetailResponse = {
+  id: number;
+  slug: string;
+  name: string;
+
+  category: SpotCategory;
+
   description: string;
+  honyeoTip: string | null;
 
-  imageUrl?: string | null;
-  imageSource?: ImageSource | null;
-  imageCredit?: string | null;
-  address?: string | null;
-  externalUrl?: string | null;
-  isRecommended: boolean;
+  imageUrl: string | null;
+  imageSource: ImageSource | null;
+  imageCredit: string | null;
 
-  destination: SpotDestination;
-  tags: SpotTag[];
+  address: string | null;
+  lat: number | null;
+  lng: number | null;
+  externalUrl: string | null;
+
+  tags: TagResponse[];
+  destination: SpotDestinationResponse;
 };
 
-export type SpotCardVM = {
-  id: number;
-  slug: string;
-  name: string;
-  imageUrl?: string | null;
-  note?: string | null;
-  tags?: SpotTag[];
-  destination: SpotDestination;
+export type FindHotSpotsResponse = {
+  food: SpotCardResponse[];
+  cafe: SpotCardResponse[];
+  drink: SpotCardResponse[];
+  activity: SpotCardResponse[];
+  nature: SpotCardResponse[];
+  etc: SpotCardResponse[];
 };

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { TripRouteCardEntity } from "@/types/trip-routes";
+import type { TripRouteCardResponse } from "@/types/trip-routes";
 import { Card, CardContent } from "@/components/common/Card";
 import Badge from "@/components/common/Badge";
 import { Bookmark, Clock3, Sparkles } from "lucide-react";
@@ -11,7 +11,7 @@ export default function RouteCard({
   route,
   variant = "default",
 }: {
-  route: TripRouteCardEntity;
+  route: TripRouteCardResponse;
   variant?: RouteCardVariant;
 }) {
   const isFeatured = variant === "featured";
@@ -19,26 +19,24 @@ export default function RouteCard({
 
   return (
     <Link
-      href={`/destinations/${route.region}/trip-routes/${route.slug}`}
+      href={`/destinations/${route.regionSlug}/trip-routes/${route.slug}`}
       className={cn("group block", isFeatured && "h-full")}
     >
       <Card
-  className={cn(
-    "rounded-2xl overflow-hidden transition duration-300",
-    "group-hover:-translate-y-1 group-hover:shadow-md",
-    isFeatured && "h-full flex flex-col",
-    isCompact && "hover:translate-y-0",
-  )}
->
-
-        {/* ================= 상단 정보 영역 (이미지 대체) ================= */}
+        className={cn(
+          "rounded-2xl overflow-hidden transition duration-300",
+          "group-hover:-translate-y-1 group-hover:shadow-md",
+          isFeatured && "h-full flex flex-col",
+          isCompact && "hover:translate-y-0",
+        )}
+      >
+        {/* 상단 정보 영역 */}
         <div
           className={cn(
             "relative border-b border-neutral-100 bg-neutral-50",
             isFeatured ? "p-6" : "p-4",
           )}
         >
-          {/* featured 강조 배지 */}
           {isFeatured && (
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-neutral-900 px-3 py-1 text-xs text-white">
@@ -60,15 +58,17 @@ export default function RouteCard({
           >
             {route.title}
           </h3>
-
-          {isFeatured && (
-            <p className="mt-2 text-sm text-neutral-600 line-clamp-2">
-              혼자 여행하기 좋은 일정으로 구성된 추천 루트예요.
-            </p>
-          )}
+          <p
+            className={cn(
+              "mt-2 text-sm text-neutral-600",
+              isFeatured ? "line-clamp-2" : "line-clamp-1",
+            )}
+          >
+            {route.summary}
+          </p>
         </div>
 
-        {/* ================= 콘텐츠 영역 ================= */}
+        {/* 하단 */}
         {isFeatured ? (
           <div className="mt-auto px-5 py-4">
             <div className="flex items-center justify-between gap-4">

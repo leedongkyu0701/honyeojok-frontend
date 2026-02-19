@@ -7,8 +7,8 @@ export default function Footer() {
       <Container className="py-10">
         {/* Top */}
         <div className="space-y-2 text-sm text-neutral-500">
-          <p className="text-base font-semibold text-neutral-900">HonYeo</p>
-          <p>혼자 떠나는 여행을 더 편하게.</p>
+          <p className="text-base font-semibold text-neutral-900">HonYeoJok</p>
+          <p>혼자 떠나는 여행을 위해.</p>
         </div>
 
         {/* Bottom */}
@@ -23,7 +23,7 @@ export default function Footer() {
           </div>
 
           <p className="text-xs text-neutral-400">
-            © {new Date().getFullYear()} HonYeo. All rights reserved.
+            © {new Date().getFullYear()} HonYeoJok. All rights reserved.
           </p>
         </div>
       </Container>

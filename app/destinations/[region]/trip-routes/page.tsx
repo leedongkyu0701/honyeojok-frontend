@@ -1,11 +1,11 @@
-import RegionTripRoute from "@/components/trip-route/RegionTripRoute";
+import TripRouteView from "@/components/trip-route/TripRouteView";
 
 export default async function TripRouteListPage({
   params,
 }: {
-  params: { region: string };
+  params: Promise<{ region: string }>;
 }) {
   const { region } = await params;
 
-  return <RegionTripRoute region={region} />;
+  return <TripRouteView region={region} />;
 }

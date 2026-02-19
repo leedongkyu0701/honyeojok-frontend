@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { CategoryType } from "@/types/post";
+import type { CategoryType } from "@/types/community";
 import { createPost } from "@/lib/api/community/api";
 import { useRouter } from "next/navigation";
 

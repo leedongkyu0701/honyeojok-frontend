@@ -1,42 +1,36 @@
 "use client";
-import type { DestinationCardVM } from "@/types/destinations";
+
+import type { DestinationCardResponse } from "@/types/destinations";
 import DestinationCard from "./DestinationCard";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDestinations } from "@/lib/api/destination/api";
+import { fetchDestinations, type DestinationListResponse, type FetchDestinationsParams } from "@/lib/api/destination/api";
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
 import { useEffect } from "react";
-import { DestinationListResponse } from "@/lib/api/destination/api";
-import { FetchDestinationsParams } from "@/lib/api/destination/api";
 
 const PAGE_SIZE = 12;
 
 export default function DestinationList({
   province,
   sort,
-  query,
   page,
   onTotalPagesChange,
 }: {
   province: FetchDestinationsParams["province"];
   sort: FetchDestinationsParams["sort"];
-  query: string | null;
   page: number;
   onTotalPagesChange?: (total: number) => void;
 }) {
-  const {
-    data: results,
-    isLoading,
-    isError,
-  } = useQuery<DestinationListResponse<DestinationCardVM>>({
-    queryKey: ["destinations", { province, sort, query, page }],
-    queryFn: () => fetchDestinations({ province, sort, q: query, take: PAGE_SIZE, page }),
+  const { data, isLoading, isError } = useQuery<
+    DestinationListResponse<DestinationCardResponse>
+  >({
+    queryKey: ["destinations", { province, sort, page }],
+    queryFn: () => fetchDestinations({ province, sort, take: PAGE_SIZE, page }),
   });
 
-
   useEffect(() => {
-    onTotalPagesChange?.(results?.totalPages ?? 1);
-  }, [onTotalPagesChange, results?.totalPages]);
+    onTotalPagesChange?.(data?.totalPages ?? 1);
+  }, [onTotalPagesChange, data?.totalPages]);
 
   if (isLoading) {
     return (
@@ -57,11 +51,11 @@ export default function DestinationList({
     );
   }
 
-  if (!(results?.data.length ?? 0)) {
+  if (!(data?.data.length ?? 0)) {
     return (
       <EmptyState
         title="조건에 맞는 여행지가 없어요."
-        description="필터를 변경하거나 검색어를 지워보세요."
+        description="필터를 변경해보세요."
       />
     );
   }
@@ -69,15 +63,13 @@ export default function DestinationList({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {(results?.data ?? []).map((destination) => (
-          <DestinationCard
-            key={destination.id}
-            destination={destination as DestinationCardVM}
-          />
+        {data!.data.map((destination) => (
+          <DestinationCard key={destination.id} destination={destination} />
         ))}
       </div>
+
       <p className="text-sm text-neutral-500">
-        {(results?.data ?? []).length}개의 여행지 중 {(results?.data ?? []).length}개 표시
+        {data!.data.length}개 표시
       </p>
     </div>
   );
