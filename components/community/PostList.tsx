@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
 
 import { fetchPosts } from "@/lib/api/community/api";
-import type { PostCardResponse, CategoryType, PostType } from "@/types/community";
+import type { PostCardResponse, PostType } from "@/types/community";
 
 import PostCard from "./PostCard";
 import Button from "@/components/common/Button";
@@ -13,54 +12,37 @@ import Pagination from "@/components/common/Pagination";
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
 
+import { useCommunityFilters } from "@/lib/useCommunityFilters";
+
 const TAKE = 10;
 
-function isPostType(v: string | null): v is PostType {
-  return v === "REVIEW" || v === "FREE" || v === "QUESTION";
-}
-
 export default function PostList() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { state, setPage, setQuery } = useCommunityFilters();
+  const { q, page, type, province } = state;
 
-  const q = searchParams.get("q") ?? "";
-  const typeParam = searchParams.get("type"); // ALL이면 없을 수도
-  const pageRaw = Number(searchParams.get("page") ?? "1");
-  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
-
-  const category: CategoryType = (typeParam as CategoryType) ?? "ALL";
-  const type: PostType | null =
-    category === "ALL" ? null : isPostType(category) ? category : null;
-
+  // 검색 input은 로컬 상태(타이핑 UX용)
   const [searchTerm, setSearchTerm] = useState(q);
 
-  const updateParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+  // URL q가 바뀌면(뒤로가기/탭전환 등) input도 동기화
+  useEffect(() => {
+    setSearchTerm(q);
+  }, [q]);
 
-    if (value) params.set(key, value);
-    else params.delete(key);
-
-    if (key !== "page") params.set("page", "1");
-
-    router.push(`/community?${params.toString()}`, { scroll: false });
-  };
-
-  const handleSearch = (event: React.FormEvent) => {
-    event.preventDefault();
-    updateParams("q", searchTerm.trim());
-  };
+  const postType: PostType | null =
+    type === "ALL" ? null : (type as PostType);
 
   const { data, isLoading, isError, isFetching } = useQuery<{
     posts: PostCardResponse[];
     totalPages: number;
   }>({
-    queryKey: ["posts", { page, take: TAKE, type, q }],
+    queryKey: ["posts", { page, take: TAKE, type: postType, q, province }],
     queryFn: () =>
       fetchPosts({
         page,
         take: TAKE,
-        type,
+        type: postType,
         q: q || null,
+        province,
       }),
     placeholderData: keepPreviousData,
     staleTime: 30_000,
@@ -69,6 +51,11 @@ export default function PostList() {
 
   const posts = useMemo(() => data?.posts ?? [], [data?.posts]);
   const totalPages = data?.totalPages ?? 1;
+
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    setQuery(searchTerm);
+  };
 
   if (isLoading) {
     return (
@@ -135,7 +122,7 @@ export default function PostList() {
       <Pagination
         page={page}
         totalPages={totalPages}
-        onPageChange={(next) => updateParams("page", String(next))}
+        onPageChange={setPage}
       />
     </div>
   );

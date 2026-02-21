@@ -3,6 +3,11 @@ export type PostType = "REVIEW" | "FREE" | "QUESTION";
 
 export type CategoryType = "ALL" | PostType;
 
+export type PostImageBlockItem = {
+  url: string;
+  caption: string | null;
+};
+
 export type PostCardResponse = {
   id: number;
   title: string;
@@ -38,7 +43,7 @@ export type PostDetailResponse = {
 
   rating?: number;
 
-  imageUrls: string[];
+  images: PostImageBlockItem[];
 
   likeCount: number;
   viewCount: number;

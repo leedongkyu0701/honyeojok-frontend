@@ -159,37 +159,58 @@ export default function WritePost() {
     },
   });
 
+  // 캡션 변경
+const handleChangeCaption = (index: number, caption: string) => {
+  setImages((prev) =>
+    prev.map((img, i) => {
+      if (i === index) {
+        // 기존 File 객체의 원본을 유지하면서 caption 속성만 덮어씌웁니다.
+        return Object.assign(img, { caption });
+      }
+      return img;
+    }),
+  );
+};
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const t = title.trim();
-    const c = content.trim();
+  const t = title.trim();
+  const c = content.trim();
 
-    if (!t || !c) {
-      setErrorMessage(["제목과 내용을 입력해주세요."]);
-      return;
-    }
+  if (!t || !c) {
+    setErrorMessage(["제목과 내용을 입력해주세요."]);
+    return;
+  }
 
-    if (type === "REVIEW" && !regionSlug) {
-      setErrorMessage(["리뷰는 지역을 선택해주세요."]);
-      return;
-    }
+  if (type === "REVIEW" && !regionSlug) {
+    setErrorMessage(["리뷰는 지역을 선택해주세요."]);
+    return;
+  }
 
-    setErrorMessage([]);
+  setErrorMessage([]);
 
-    const formData = new FormData();
-    formData.append("title", t);
-    formData.append("content", c);
-    formData.append("type", type);
+  const formData = new FormData();
+  formData.append("title", t);
+  formData.append("content", c);
+  formData.append("type", type);
 
-    if (type === "REVIEW") {
-      formData.append("regionSlug", regionSlug);
-      formData.append("rating", String(rating));
-    }
+  if (type === "REVIEW") {
+    formData.append("regionSlug", regionSlug);
+    formData.append("rating", String(rating));
+  }
 
-    images.forEach((file) => formData.append("image", file));
-    createPostMutation.mutate(formData);
-  };
+  // 2. captions (텍스트 배열)도 여기서 미리 append
+  images.forEach((file) => {
+    formData.append("captions", (file.caption ?? "").trim());
+  });
+
+  // ✅ 이미지 + 캡션을 "같은 순서"로 보냄 // 이미지는 제일 마지막에 
+  images.forEach((file) => formData.append("image", file));
+
+  
+  createPostMutation.mutate(formData);
+};
 
   const isSubmitting = createPostMutation.isPending;
 
@@ -261,11 +282,12 @@ export default function WritePost() {
 
             {/* 이미지 업로드 (새 UI) */}
             <ImageUploader
-              images={images}
-              onAddFiles={handleAddFiles}
-              onRemove={removeImage}
-              max={maxImages}
-            />
+  images={images}
+  onAddFiles={handleAddFiles}
+  onRemove={removeImage}
+  onChangeCaption={handleChangeCaption}
+  max={maxImages}
+/>
 
             {/* 내용 */}
             <div className="space-y-2">

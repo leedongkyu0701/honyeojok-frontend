@@ -55,6 +55,18 @@ export type SpotDetailResponse = {
   destination: SpotDestinationResponse;
 };
 
+export type SpotMapResponse = {
+  id: number;
+  slug: string;
+  name: string;
+
+  category: SpotCategory;
+  summary: string;
+
+  lat: number | null;
+  lng: number | null;
+};
+
 export type FindHotSpotsResponse = {
   food: SpotCardResponse[];
   cafe: SpotCardResponse[];

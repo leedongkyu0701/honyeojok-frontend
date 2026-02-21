@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { PostCardResponse } from "@/types/community";
 import { Card } from "@/components/common/Card";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,9 @@ export default function PostCard({ post, variant = "default" }: Props) {
   const dateText = timeAgoOrDate(post.createdAt);
   const nickName = post.nickName ?? "익명";
 
+  // ✅ best 카드에서만 썸네일 표시 (default는 이미지 요청 자체가 안 나감)
+  const showThumbnail = isBest && !!post.thumbnailUrl;
+
   return (
     <Link href={`/community/${post.id}`} className="group block h-full">
       <Card
@@ -36,15 +40,23 @@ export default function PostCard({ post, variant = "default" }: Props) {
           "p-0",
         )}
       >
-        <div
-          className={cn("flex", isBest ? "flex-row lg:flex-col" : "flex-row")}
-        >
-          <div
-            className={cn(
-              isBest ? "p-4 lg:p-5" : "p-4 sm:p-5",
-              "min-w-0 flex-1",
-            )}
-          >
+        <div className={cn("flex", isBest ? "flex-col" : "flex-row items-center")}>
+          {/* ✅ Thumbnail (BEST only) */}
+          {showThumbnail && (
+            <div className="relative h-44 w-full overflow-hidden bg-neutral-100">
+              <Image
+                src={post.thumbnailUrl!}
+                alt=""
+                fill
+                sizes="(max-width: 1024px) 100vw, 400px"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
+            </div>
+          )}
+
+          {/* Content */}
+          <div className={cn("min-w-0 flex-1", isBest ? "p-4 lg:p-5" : "p-4 sm:p-5")}>
             {/* 타입 + 날짜 */}
             <div className="mb-2 flex items-center gap-2 text-xs">
               <span
@@ -59,17 +71,29 @@ export default function PostCard({ post, variant = "default" }: Props) {
               <span className="text-neutral-500">{dateText}</span>
             </div>
 
-            {/* 제목 */}
-            <h2
-              className={cn(
-                "font-medium tracking-tight text-neutral-900",
-                isBest
-                  ? "text-base line-clamp-1 lg:text-lg lg:line-clamp-2"
-                  : "text-base line-clamp-2",
-              )}
-            >
-              {post.title}
-            </h2>
+            {/* 제목 + 메타 */}
+<div className="flex items-start gap-2">
+  <h2
+    className={cn(
+      "min-w-0 flex-1 font-medium tracking-tight text-neutral-900",
+      isBest
+        ? "text-base line-clamp-1 lg:text-lg lg:line-clamp-2"
+        : "text-base line-clamp-2",
+    )}
+  >
+    {post.title}
+  </h2>
+
+  {/* ❤️ 좋아요 / 👀 조회수 */}
+  <div className="shrink-0 flex items-center gap-3 text-xs text-neutral-500 pt-0.5">
+    <span className="inline-flex items-center gap-1">
+      ❤️ {post.likeCount}
+    </span>
+    <span className="inline-flex items-center gap-1">
+      👀 {post.viewCount}
+    </span>
+  </div>
+</div>
 
             {/* 작성자 */}
             <div className="mt-2 text-sm text-neutral-600">
@@ -79,20 +103,10 @@ export default function PostCard({ post, variant = "default" }: Props) {
 
             {/* 지역 */}
             {post.region && (
-              <div className="mt-2 text-xs text-neutral-500">
-                📍 {post.region}
-              </div>
+              <div className="mt-2 text-xs text-neutral-500">📍 {post.region}</div>
             )}
 
-            {/* ✅ 좋아요 + 조회수 */}
-            <div className="mt-3 flex items-center gap-4 text-xs text-neutral-500">
-              <span className="inline-flex items-center gap-1">
-                ❤️ {post.likeCount}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                👀 {post.viewCount}
-              </span>
-            </div>
+          
           </div>
         </div>
       </Card>

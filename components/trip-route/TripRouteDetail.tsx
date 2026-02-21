@@ -4,8 +4,7 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchTripRouteDetail } from "@/lib/api/trip-route/api";
-import type { TripRouteDetailResponse } from "@/types/trip-routes"; // ✅ 변경
-
+import type { TripRouteDetailResponse } from "@/types/trip-routes";
 import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
 import Skeleton from "@/components/common/Skeleton";
@@ -19,11 +18,12 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useAuthStore } from "@/stores/auth.store";
+import { fetchNearbyTripRoutes } from "@/lib/api/trip-route/api";
+import { SpotCategory } from "@/types/spots";
 
 const DynamicTripRouteMap = dynamic(() => import("../Map/TripRouteMap"), {
   ssr: false,
 });
-
 
 export default function TripRouteDetail({
   region,
@@ -37,13 +37,56 @@ export default function TripRouteDetail({
     data: route,
     isLoading,
     isError,
-  } = useQuery<TripRouteDetailResponse>({ // ✅ 변경
+  } = useQuery<TripRouteDetailResponse>({
+    // ✅ 변경
     queryKey: ["trip-route", region, slug],
     queryFn: () => fetchTripRouteDetail(region, slug),
     enabled: authInitialized, // ✅ authInitialized가 true일 때만 쿼리 실행
   });
 
-  // console.log("Fetched trip route detail:", route); // ✅ 디버깅용 로그
+  const {
+    data: nearbySpots,
+    isLoading: nearbySpotsLoading,
+    isError: nearbySpotsError,
+  } = useQuery({
+    queryKey: ["nearby-spots"],
+    queryFn: () =>
+      fetchNearbyTripRoutes(slug, {
+        radiusKm: 5,
+        limit: 10,
+      }),
+    enabled: !!route, // route 데이터가 있을 때만 실행
+  });
+
+  const defaultNearbyCats: SpotCategory[] = [
+    SpotCategory.FOOD,
+    SpotCategory.CAFE,
+    SpotCategory.DRINK,
+  ];
+
+  const [enabledNearbyCats, setEnabledNearbyCats] =
+    useState<SpotCategory[]>(defaultNearbyCats);
+
+  const toggleNearbyCat = (cat: SpotCategory) => {
+    setEnabledNearbyCats((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat],
+    );
+  };
+
+  const nearbyFlatForMap = useMemo(() => {
+    if (!nearbySpots) return [];
+    const all = Object.values(nearbySpots).flat();
+    const uniq = new Map<number, (typeof all)[number]>();
+    for (const s of all) uniq.set(s.id, s);
+    return [...uniq.values()];
+  }, [nearbySpots]);
+
+  const nearbyFilteredForMap = useMemo(() => {
+    return nearbyFlatForMap.filter((s) =>
+      enabledNearbyCats.includes(s.category),
+    );
+  }, [nearbyFlatForMap, enabledNearbyCats]);
+
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -91,7 +134,7 @@ export default function TripRouteDetail({
           if (!oldRoute) return oldRoute;
           return {
             ...oldRoute,
-            bookmarkedByMe: data.bookmarked, 
+            bookmarkedByMe: data.bookmarked,
             bookmarkCount: data.bookmarkCount,
           };
         },
@@ -170,17 +213,17 @@ export default function TripRouteDetail({
     bookmarkMutation.mutate();
   };
 
-    const honyeoCostLabel = (() => {
+  const honyeoCostLabel = (() => {
     const cost = route.honyeoCost; // number | null | undefined (원 단위)
     if (!cost || cost <= 0) return null;
 
     // 만원 단위 표기 (정수면 "10만원", 소수면 "12.5만원" 느낌)
     const man = cost / 10000;
-    const manText =
-      Number.isInteger(man) ? `${man}` : man.toFixed(1).replace(/\.0$/, "");
+    const manText = Number.isInteger(man)
+      ? `${man}`
+      : man.toFixed(1).replace(/\.0$/, "");
     return `약 ${manText}만원`;
   })();
-
 
   return (
     <div className="py-10">
@@ -188,7 +231,65 @@ export default function TripRouteDetail({
         <SectionHeader title={route.title} description={route.summary} />
 
         {activeDayEntity ? (
-          <DynamicTripRouteMap items={activeDayEntity.items} />
+          <>
+            <DynamicTripRouteMap
+              items={activeDayEntity.items}
+              nearbySpots={nearbyFilteredForMap} // ✅ 맵에 전달
+            />
+
+            {/* ✅ 지도 아래 토글 버튼 */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={
+                  enabledNearbyCats.includes(SpotCategory.FOOD)
+                    ? "primary"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() => toggleNearbyCat(SpotCategory.FOOD)}
+              >
+                혼밥
+              </Button>
+
+              <Button
+                type="button"
+                variant={
+                  enabledNearbyCats.includes(SpotCategory.CAFE)
+                    ? "primary"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() => toggleNearbyCat(SpotCategory.CAFE)}
+              >
+                카페
+              </Button>
+
+              <Button
+                type="button"
+                variant={
+                  enabledNearbyCats.includes(SpotCategory.DRINK)
+                    ? "primary"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() => toggleNearbyCat(SpotCategory.DRINK)}
+              >
+                혼술
+              </Button>
+            </div>
+
+            {/* (선택) 로딩/에러 표시 */}
+            {nearbySpotsLoading ? (
+              <div className="text-xs text-neutral-500">
+                근처 스팟 불러오는 중...
+              </div>
+            ) : nearbySpotsError ? (
+              <div className="text-xs text-red-500">
+                근처 스팟을 불러오지 못했어요.
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         {/* 메타 */}

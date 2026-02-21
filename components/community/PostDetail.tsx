@@ -8,7 +8,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PostDetailResponse } from "@/types/community";
 import { useRouter } from "next/navigation";
-import PostImageCarousel from "./PostImageCarousel";
 
 import { Card, CardContent } from "@/components/common/Card";
 import Badge from "@/components/common/Badge";
@@ -25,6 +24,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { timeAgoOrDate } from "@/lib/timeAgo";
 import { useEffect } from "react";
+import PostImageBlock from "./PostImageBlock";
 
 function typeLabel(t: PostDetailResponse["type"]) {
   if (t === "REVIEW") return "리뷰";
@@ -200,9 +200,9 @@ export default function PostDetail({ id }: { id: number }) {
           </div>
 
           {/* Images */}
-          {postDetail.imageUrls?.length ? (
-            <PostImageCarousel imageUrls={postDetail.imageUrls} />
-          ) : null}
+          {postDetail.images?.length ? (
+  <PostImageBlock images={postDetail.images} />
+) : null}
 
           {/* Content */}
           <article className="prose prose-neutral max-w-none">

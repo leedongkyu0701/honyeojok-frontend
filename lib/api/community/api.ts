@@ -1,5 +1,6 @@
 import { fetchClient } from "@/lib/fetchClient";
 import { parseApiError } from "@/lib/parseApiError";
+import { ProvinceGroup } from "@/types/util";
 import type {
   PostCardResponse,
   PostDetailResponse,
@@ -17,6 +18,7 @@ export type FindPostsParams = {
   take?: number | null;
   type?: PostType | null;
   q?: string | null;
+  province?: ProvinceGroup | null;
 };
 
 export async function fetchPosts(
@@ -28,7 +30,7 @@ export async function fetchPosts(
   if (params.take != null) qs.append("take", String(params.take));
   if (params.type) qs.append("type", params.type);
   if (params.q) qs.append("q", params.q);
-  
+  if (params.province) qs.append("province", params.province);
   const response = await fetchClient(`/posts${qs.toString() ? `?${qs}` : ""}`, {
     skipAuth: true,
     withCredentials: false,
@@ -123,6 +125,7 @@ export async function createComment(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+
   await parseApiError(response);
   return response.json();
 }

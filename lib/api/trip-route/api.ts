@@ -4,6 +4,17 @@ import type {
 } from "@/types/trip-routes";
 import { fetchClient } from "@/lib/fetchClient";
 import { parseApiError } from "@/lib/parseApiError";
+import { SpotCategory } from "@/types/spots";
+import { SpotMapResponse } from "@/types/spots";
+
+
+export type FetchNearbyTripRoutesParams = {
+  radiusKm?: number;
+  categories?: SpotCategory[];
+  limit?: number;
+};
+
+export type NearbySpotsResponse = Partial<Record<SpotCategory, SpotMapResponse[]>>;
 
 export async function fetchTripRoutesByRegion(
   region: string,
@@ -72,6 +83,27 @@ export async function removeBookmarkTripRoute(
   const response = await fetchClient(
     `/trip-routes/bookmark/remove/${encodeURIComponent(slug)}`,
     { method: "POST" },
+  );
+  await parseApiError(response);
+  return response.json();
+}
+
+export async function fetchNearbyTripRoutes(
+  routeSlug: string,
+  params: FetchNearbyTripRoutesParams,
+): Promise<NearbySpotsResponse> {
+  const qs = new URLSearchParams();
+  if (params?.radiusKm != null) qs.set("radiusKm", String(params.radiusKm));
+  if (params?.limit != null) qs.set("limit", String(params.limit));
+  if (params?.categories?.length) {
+    params.categories.forEach((c) => qs.append("categories", c));
+  }
+  const queryString = qs.toString();
+
+  const response = await fetchClient(
+    `/trip-routes/nearby-spots/${encodeURIComponent(routeSlug)}${
+      queryString ? `?${queryString}` : ""
+    }`,
   );
   await parseApiError(response);
   return response.json();

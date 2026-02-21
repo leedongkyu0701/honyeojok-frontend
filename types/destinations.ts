@@ -21,6 +21,7 @@ export type DestinationMapResponse = {
   latitude: number;
   longitude: number;
   score: number;
+  tagSlugs: string[];
 };
 
 export type DestinationDetailResponse = {
