@@ -31,18 +31,16 @@ import {
   getMyBookmarks,
   getMyPosts,
 } from "@/lib/api/user/api";
-import { logout as logoutServer } from "@/lib/api/auth/api";
+import {
+  logout as logoutServer,
+  withdraw as withdrawServer,
+} from "@/lib/api/auth/api";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
+import { timeAgoOrDate } from "@/lib/timeAgo";
 
 const LIMIT = 8;
-
 type TabKey = "bookmarks" | "posts";
-
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? "-" : d.toLocaleDateString();
-}
 
 function providerLabel(provider?: string) {
   if (!provider) return "-";
@@ -64,34 +62,34 @@ export default function MyPage() {
   const [postPage, setPostPage] = useState(1);
   const [bmPage, setBmPage] = useState(1);
 
-  // 탭 바뀌면 페이지 리셋 (UX)
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [nickDraft, setNickDraft] = useState("");
+
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPostPage(1);
     setBmPage(1);
   }, [tab]);
 
-  // ====== Me ======
   const meQuery = useQuery<ProfileResponse>({
     queryKey: ["me"],
     queryFn: fetchMeApi,
     enabled: isAuthenticated,
-    staleTime: 30_000,
   });
 
   const me = meQuery.data;
 
-  // ====== Nickname update ======
   const nicknameMutation = useMutation({
     mutationFn: (nickName: string) => updateNickname(nickName),
-    meta: { silent: true }, // 전역토스트 끄기
+    meta: { silent: true },
     onSuccess: async () => {
-      // me 재조회(서버가 ok만 주는 경우까지 커버)
       await queryClient.invalidateQueries({ queryKey: ["me"] });
       toast.success("닉네임이 변경됐어요");
     },
     onError: (err) => {
       if (err instanceof ApiError) {
-        if(err.code === ErrorCode.DUPLICATE_RESOURCE) {
+        if (err.code === ErrorCode.DUPLICATE_RESOURCE) {
           toast.error("이미 사용 중인 닉네임이에요");
           return;
         }
@@ -102,7 +100,32 @@ export default function MyPage() {
     },
   });
 
-  // ====== Posts ======
+  const logoutMutation = useMutation({
+    mutationFn: logoutServer,
+    onSettled: () => {
+      logout();
+      queryClient.clear();
+      toast.success("로그아웃 완료");
+      router.replace("/auth/login");
+    },
+  });
+
+  const withdrawMutation = useMutation({
+    mutationFn: withdrawServer,
+    onSuccess: () => toast.success("회원탈퇴가 완료됐어요"),
+    onSettled: () => {
+      setIsWithdrawOpen(false);
+      logout();
+      queryClient.clear();
+      router.replace("/");
+    },
+  });
+
+  const isBusy =
+    nicknameMutation.isPending ||
+    logoutMutation.isPending ||
+    withdrawMutation.isPending;
+
   const myPostsQuery = useQuery<{
     posts: PostCardResponse[];
     totalPages: number;
@@ -110,11 +133,9 @@ export default function MyPage() {
     queryKey: ["me", "posts", postPage, LIMIT],
     queryFn: () => getMyPosts(postPage, LIMIT),
     enabled: isAuthenticated && tab === "posts",
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 
-  // ====== Bookmarks ======
   const myBookmarksQuery = useQuery<{
     tripRoutes: TripRouteCardResponse[];
     totalPages: number;
@@ -122,32 +143,14 @@ export default function MyPage() {
     queryKey: ["me", "bookmarks", bmPage, LIMIT],
     queryFn: () => getMyBookmarks(bmPage, LIMIT),
     enabled: isAuthenticated && tab === "bookmarks",
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
-
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [nickDraft, setNickDraft] = useState("");
 
   const openEdit = () => {
     setNickDraft(me?.nickName ?? "");
     setIsEditOpen(true);
   };
 
-  const logoutHandler = async () => {
-    try {
-      await logoutServer();
-    } catch {
-      // 서버 로그아웃 실패해도 로컬은 끊는 게 UX상 나음
-    } finally {
-      logout();
-      await queryClient.clear();
-      toast.success("로그아웃 완료");
-      router.replace("/auth/login");
-    }
-  };
-
-  // ====== Logged out view ======
   if (!isAuthenticated) {
     return (
       <Container className="py-10">
@@ -167,7 +170,6 @@ export default function MyPage() {
     );
   }
 
-  // ====== Me loading ======
   if (meQuery.isLoading) {
     return (
       <Container className="py-10">
@@ -180,7 +182,6 @@ export default function MyPage() {
     );
   }
 
-  // ====== Me error ======
   if (meQuery.isError || !me) {
     return (
       <Container className="py-10">
@@ -192,7 +193,6 @@ export default function MyPage() {
     );
   }
 
-  // ====== Data & Pagination ======
   const posts = myPostsQuery.data?.posts ?? [];
   const bookmarks = myBookmarksQuery.data?.tripRoutes ?? [];
 
@@ -208,7 +208,6 @@ export default function MyPage() {
   return (
     <Container className="py-10">
       <div className="flex flex-col gap-6">
-        {/* Header */}
         <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold">마이페이지</h1>
@@ -217,15 +216,18 @@ export default function MyPage() {
             </p>
           </div>
 
-          <Button onClick={logoutHandler}>로그아웃</Button>
+          <Button onClick={() => logoutMutation.mutate()} disabled={isBusy}>
+            {logoutMutation.isPending ? "로그아웃 중..." : "로그아웃"}
+          </Button>
         </div>
 
-        {/* Profile Card */}
         <Card className="rounded-2xl p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-semibold truncate">{me.nickName}</h2>
+                <h2 className="text-lg font-semibold truncate">
+                  {me.nickName}
+                </h2>
                 <Badge>{providerLabel(me.provider)}</Badge>
               </div>
 
@@ -237,48 +239,38 @@ export default function MyPage() {
                 <p>
                   가입일:{" "}
                   <span className="text-neutral-800">
-                    {formatDate(me.createdAt)}
+                    {timeAgoOrDate(me.createdAt)}
                   </span>
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={openEdit}>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={openEdit} disabled={isBusy}>
                 닉네임 수정
               </Button>
             </div>
           </div>
         </Card>
 
-        {/* Tabs */}
         <div className="flex gap-2">
-          <button
+          <Button
             onClick={() => setTab("bookmarks")}
-            className={[
-              "rounded-full px-4 py-2 text-sm transition",
-              tab === "bookmarks"
-                ? "bg-neutral-900 text-white"
-                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200",
-            ].join(" ")}
+            size="md"
+            variant={tab === "bookmarks" ? "primary" : "secondary"}
           >
             북마크
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setTab("posts")}
-            className={[
-              "rounded-full px-4 py-2 text-sm transition",
-              tab === "posts"
-                ? "bg-neutral-900 text-white"
-                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200",
-            ].join(" ")}
+            size="md"
+            variant={tab === "posts" ? "primary" : "secondary"}
           >
             내가 쓴 글
-          </button>
+          </Button>
         </div>
 
-        {/* Content */}
         {tab === "bookmarks" ? (
           <section className="space-y-4">
             <div className="flex items-center justify-between">
@@ -290,14 +282,14 @@ export default function MyPage() {
                 </span>
                 <Button
                   variant="secondary"
-                  disabled={!canPrevBm || myBookmarksQuery.isFetching}
+                  disabled={!canPrevBm || myBookmarksQuery.isFetching || isBusy}
                   onClick={() => setBmPage((p) => Math.max(1, p - 1))}
                 >
                   이전
                 </Button>
                 <Button
                   variant="secondary"
-                  disabled={!canNextBm || myBookmarksQuery.isFetching}
+                  disabled={!canNextBm || myBookmarksQuery.isFetching || isBusy}
                   onClick={() => setBmPage((p) => p + 1)}
                 >
                   다음
@@ -340,14 +332,14 @@ export default function MyPage() {
                 </span>
                 <Button
                   variant="secondary"
-                  disabled={!canPrevPosts || myPostsQuery.isFetching}
+                  disabled={!canPrevPosts || myPostsQuery.isFetching || isBusy}
                   onClick={() => setPostPage((p) => Math.max(1, p - 1))}
                 >
                   이전
                 </Button>
                 <Button
                   variant="secondary"
-                  disabled={!canNextPosts || myPostsQuery.isFetching}
+                  disabled={!canNextPosts || myPostsQuery.isFetching || isBusy}
                   onClick={() => setPostPage((p) => p + 1)}
                 >
                   다음
@@ -382,11 +374,48 @@ export default function MyPage() {
         )}
       </div>
 
-      {/* Nickname Edit Modal */}
+      {isWithdrawOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+          onClick={() => (isBusy ? null : setIsWithdrawOpen(false))}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="text-lg font-semibold">정말 탈퇴할까요?</h4>
+            <p className="mt-2 text-sm text-neutral-600">
+              회원탈퇴를 하면 계정이 비활성화되고, 로그아웃 처리돼요.
+              <br />
+              작성한 글/댓글은 정책에 따라 일부 남아 있을 수 있어요.
+            </p>
+
+            <div className="mt-5 flex gap-2">
+              <Button
+                variant="secondary"
+                className="w-full"
+                disabled={isBusy}
+                onClick={() => setIsWithdrawOpen(false)}
+              >
+                취소
+              </Button>
+
+              <Button
+                className="w-full"
+                disabled={isBusy}
+                onClick={() => withdrawMutation.mutate()}
+              >
+                {withdrawMutation.isPending ? "탈퇴 처리 중..." : "탈퇴하기"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isEditOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
-          onClick={() => setIsEditOpen(false)}
+          onClick={() => (isBusy ? null : setIsEditOpen(false))}
         >
           <div
             className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
@@ -404,6 +433,7 @@ export default function MyPage() {
               placeholder="새 닉네임"
               maxLength={12}
               autoFocus
+              disabled={nicknameMutation.isPending || isBusy}
             />
 
             <div className="mt-5 flex gap-2">
@@ -411,7 +441,7 @@ export default function MyPage() {
                 variant="secondary"
                 className="w-full"
                 onClick={() => setIsEditOpen(false)}
-                disabled={nicknameMutation.isPending}
+                disabled={nicknameMutation.isPending || isBusy}
               >
                 취소
               </Button>
@@ -419,10 +449,11 @@ export default function MyPage() {
               <Button
                 className="w-full"
                 disabled={
-                  nicknameMutation.isPending || nickDraft.trim().length < 2
+                  isBusy ||
+                  nicknameMutation.isPending ||
+                  nickDraft.trim().length < 2
                 }
                 onClick={async () => {
-                  // mutateAsync는 에러 throw하므로, 토스트는 onError에서 처리됨
                   await nicknameMutation.mutateAsync(nickDraft.trim());
                   setIsEditOpen(false);
                 }}
@@ -431,7 +462,6 @@ export default function MyPage() {
               </Button>
             </div>
 
-            {/* 인라인 힌트(선택) */}
             {nickDraft.trim().length > 0 && nickDraft.trim().length < 2 ? (
               <p className="mt-2 text-xs text-neutral-500">
                 닉네임은 최소 2자 이상이어야 해요.
@@ -440,6 +470,26 @@ export default function MyPage() {
           </div>
         </div>
       )}
+
+      <section className="mt-20 border-t border-neutral-200 pt-8">
+        <div className="mr-auto max-w-xl text-left">
+          <p className="text-sm text-neutral-500">
+            더 이상 서비스를 이용하지 않으신가요?
+          </p>
+
+          <button
+            onClick={() => setIsWithdrawOpen(true)}
+            disabled={isBusy}
+            className="mt-3 text-sm text-neutral-400 underline underline-offset-4 hover:text-neutral-600 disabled:opacity-50"
+          >
+            회원탈퇴
+          </button>
+
+          <p className="mt-2 text-xs text-neutral-400">
+            탈퇴 시 계정은 비활성화되며 복구할 수 없어요.
+          </p>
+        </div>
+      </section>
     </Container>
   );
 }
