@@ -5,6 +5,7 @@ import { ErrorCode } from "@/types/error-code";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001";
+
 let refreshPromise: Promise<string> | null = null;
 
 async function runRefresh(): Promise<string> {
@@ -65,7 +66,7 @@ export async function fetchClient(
 
   const res = await doFetch(options.skipAuth ? undefined : accessToken);
 
-  if (res.status !== 401 || options.skipAuth) return res;
+  if (res.status !== 401 || options.skipAuth) return res; // 인증 상태 제외는 바로 반환
 
   let shouldRefresh = true;
   try {
@@ -91,7 +92,6 @@ export async function fetchClient(
     setAccessToken(newToken);
     return await doFetch(newToken);
   } catch (e) {
-    // refresh 실패면 로그아웃
     logout();
     throw e;
   }

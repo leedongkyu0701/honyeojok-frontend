@@ -17,17 +17,19 @@ export default function Pagination({
       <Button
         variant="outline"
         size="sm"
+        aria-label="이전 페이지"
         onClick={() => onPageChange(page - 1)}
         disabled={!canPrev}
       >
         이전
-      </Button>
+      </Button >
       <div className="text-sm text-neutral-600">
         {page} / {totalPages}
       </div>
       <Button
         variant="outline"
         size="sm"
+        aria-label="다음 페이지"
         onClick={() => onPageChange(page + 1)}
         disabled={!canNext}
       >

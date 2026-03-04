@@ -18,7 +18,7 @@ export default function BookmarkButton({
   const cached = queryClient.getQueryData<{
     bookmarkedByMe: boolean;
     bookmarkCount: number;
-  }>(["trip-route", slug]);
+  }>(["trip-route", region, slug]);
   const bookmarkedByMeCached = cached ? cached.bookmarkedByMe : bookmarkedByMe;
   const bookmarkCountCached = cached
     ? cached.bookmarkCount

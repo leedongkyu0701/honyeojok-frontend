@@ -1,6 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+
 import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
 import Skeleton from "@/components/common/Skeleton";
@@ -12,6 +14,17 @@ import Link from "next/link";
 import Button from "@/components/common/Button";
 import HorizontalRail from "@/components/common/HorizontalRail";
 
+function shuffle<T>(arr: T[], n: number) {
+  const copy = [...arr];
+
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy.slice(0, n);
+}
+
 export default function BestSpotSection() {
   const {
     data: spots,
@@ -22,12 +35,17 @@ export default function BestSpotSection() {
     queryFn: fetchRecommendedSpots,
   });
 
+  const pickedSpots = useMemo(() => {
+    if (!spots || spots.length === 0) return [];
+    return shuffle(spots, 10);
+  }, [spots]);
+
   return (
-    <section className="py-12">
+    <section className="py-12 ">
       <Container className="space-y-6">
         <SectionHeader
           title="추천 스팟"
-          description="혼자 가기 좋은 스팟을 모아봤어요."
+          description="혼자 가기 좋은 인기있는 장소를 모아봤어요."
           action={
             <Link href="/spots">
               <Button variant="ghost" size="sm">
@@ -39,13 +57,10 @@ export default function BestSpotSection() {
 
         {isLoading ? (
           <HorizontalRail
-            itemClassName="w-[85%] sm:w-[48%] md:w-[40%] lg:w-[24%]"
-            showFade={false}
-            showControls
-            showDots
+            itemClassName="w-[44%] sm:w-[48.5%] md:w-[32%] lg:w-[23.5%]"
           >
             {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-48 w-full" />
+              <Skeleton key={index} className="h-48 w-full rounded-2xl" />
             ))}
           </HorizontalRail>
         ) : null}
@@ -64,14 +79,11 @@ export default function BestSpotSection() {
           />
         ) : null}
 
-        {!isLoading && !isError && spots && spots.length > 0 ? (
+        {!isLoading && !isError && pickedSpots.length > 0 ? (
           <HorizontalRail
-            itemClassName="w-[85%] sm:w-[48%] md:w-[40%] lg:w-[24%]"
-            showFade={false}
-            showControls
-            showDots
+            itemClassName="w-[44%] sm:w-[48.5%] md:w-[32%] lg:w-[23.5%]"
           >
-            {spots.map((spot) => (
+            {pickedSpots.map((spot) => (
               <SpotCard key={spot.id} spot={spot} />
             ))}
           </HorizontalRail>

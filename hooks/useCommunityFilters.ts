@@ -28,7 +28,11 @@ export function useCommunityFilters() {
   const searchParams = useSearchParams();
 
   const state: CommunityFilterState = useMemo(() => {
-    const type = (searchParams.get("type") as CategoryType) ?? "ALL";
+    const typeRaw = searchParams.get("type");
+    const type: CategoryType =
+      typeRaw === "REVIEW" || typeRaw === "FREE" || typeRaw === "QUESTION"
+        ? typeRaw
+        : "ALL";
     const q = searchParams.get("q") ?? "";
 
     const pageRaw = Number(searchParams.get("page") ?? "1");
@@ -37,7 +41,6 @@ export function useCommunityFilters() {
     const provinceParam = searchParams.get("province");
     const rawProvince = isProvinceGroup(provinceParam) ? provinceParam : null;
 
-    // ✅ REVIEW가 아니면 province는 무조건 무시 (URL 직입력 방어)
     const province = type === "REVIEW" ? rawProvince : null;
 
     return { type, q, page, province };
@@ -47,26 +50,22 @@ export function useCommunityFilters() {
     (next: Partial<CommunityFilterState>) => {
       const params = new URLSearchParams(searchParams.toString());
 
-      // type
       if (next.type !== undefined) {
         if (next.type === "ALL") params.delete("type");
         else params.set("type", next.type);
       }
 
-      // q
       if (next.q !== undefined) {
         const trimmed = next.q.trim();
         if (trimmed) params.set("q", trimmed);
         else params.delete("q");
       }
 
-      // page: 1이면 깔끔하게 제거
       if (next.page !== undefined) {
         if (next.page <= 1) params.delete("page");
         else params.set("page", String(next.page));
       }
 
-      // province
       if (next.province !== undefined) {
         if (next.province === null) params.delete("province");
         else params.set("province", next.province);
@@ -82,7 +81,6 @@ export function useCommunityFilters() {
       pushParams({
         type,
         page: 1,
-        // ✅ REVIEW 아니면 province 제거
         province: type === "REVIEW" ? undefined : null,
       });
     },
@@ -105,7 +103,7 @@ export function useCommunityFilters() {
 
   const setProvince = useCallback(
     (province: ProvinceGroup | null) => {
-      // ✅ REVIEW가 아닐 때 province 세팅 시도 방어
+
       if (state.type !== "REVIEW") return;
       pushParams({ province, page: 1 });
     },

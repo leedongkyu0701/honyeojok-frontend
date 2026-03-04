@@ -3,9 +3,9 @@ import { create } from 'zustand';
 interface AuthState {
   accessToken: string | null;
   isAuthenticated: boolean;
-  authInitialized: boolean; // 초기화 여부 추가
+  authInitialized: boolean;
 
-  setAccessToken: (token: string) => void;
+  setAccessToken: (token: string | null) => void;
   logout: () => void;
   setAuthInitialized: (initialized: boolean) => void;
 }

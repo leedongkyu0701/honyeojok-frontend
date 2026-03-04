@@ -27,6 +27,6 @@ export async function parseApiError(response: Response): Promise<void> {
       apiErrorBody.requestId,
     );
   } else {
-    throw new ApiError(response.status, response.statusText || "Request failed");
+    throw new ApiError(response.status, response.statusText || "Request failed"); // body가 ApiErrorBody 형태가 아니면 statusText를 메시지로 사용
   }
 }

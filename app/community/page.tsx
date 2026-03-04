@@ -13,10 +13,8 @@ export default function CommunityPage() {
   return (
     <div className="py-10">
       <Container className="space-y-10">
-        {/* 1) 헤더는 전체 폭 */}
         <CommunityHeader />
 
-        {/* 2) 본문만 2컬럼 */}
         <div className="grid gap-10 md:grid-cols-[200px_1fr]">
           <CommunityFilters />
           <PostList />

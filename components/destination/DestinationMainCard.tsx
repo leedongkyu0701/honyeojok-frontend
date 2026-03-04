@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { DestinationCardResponse } from "@/types/destinations";
+import Badge from "../common/Badge";
 
 const FALLBACK_IMAGE = "/images/fallback.png";
 
@@ -23,10 +24,8 @@ export default function MainDestinationCard({
         fill
         sizes="(max-width: 640px) 85vw, (max-width: 1024px) 40vw, 24vw"
         className="object-cover transition duration-500 group-hover:scale-[1.03]"
-        priority={false}
       />
 
-      {/* 오버레이(가독성) */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
 
       <div className="absolute inset-x-0 bottom-0 p-4 text-white">
@@ -34,11 +33,9 @@ export default function MainDestinationCard({
           <h3 className="text-lg font-semibold leading-tight drop-shadow-sm">
             {name}
           </h3>
-          <div className="rounded-full bg-white/15 px-3 py-1 text-sm backdrop-blur">
-            ⭐ {score.toFixed(1)}
-          </div>
+         <Badge variant="glass">⭐ {score.toFixed(1)}</Badge>
         </div>
-        <p className="mt-2 text-sm text-white/85 line-clamp-2">{summary}</p>
+        <p className="mt-2 text-sm text-white/85 line-clamp-1">{summary}</p>
       </div>
     </Link>
   );

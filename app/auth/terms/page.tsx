@@ -2,7 +2,7 @@ import LegalLayout from "@/components/auth/LegalLayout";
 import LegalSection from "@/components/auth/LegalSection";
 
 export const metadata = {
-  title: "이용약관 | 혼여족",
+  title: "이용약관",
 };
 
 export default function TermsPage() {
@@ -49,7 +49,6 @@ export default function TermsPage() {
         </ul>
       </LegalSection>
 
-      {/* ✅ 핵심: UGC 라이선스 */}
       <LegalSection title="제7조 (이용자 콘텐츠의 권리 및 라이선스)">
         <p>
           ① 이용자가 서비스에 게시한 콘텐츠의 저작권은 원칙적으로 이용자에게 귀속됩니다.

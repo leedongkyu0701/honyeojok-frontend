@@ -1,19 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import Button from "@/components/common/Button";
 
 export interface FileWithPreview extends File {
   preview: string;
-  caption?: string; // ✅ 캡션 추가
+  caption?: string;
 }
 
 type Props = {
   images: FileWithPreview[];
   onAddFiles: (files: FileList | null) => void;
   onRemove: (index: number) => void;
-  onChangeCaption: (index: number, caption: string) => void; // ✅ 캡션 변경 핸들러
+  onChangeCaption: (index: number, caption: string) => void;
   max?: number;
 };
 
@@ -29,14 +29,10 @@ export default function ImageUploader({
 
   const hasImages = images.length > 0;
 
-  const helperText = useMemo(() => {
-    if (!hasImages) return `클릭하거나 드래그해서 올리세요. (최대 ${max}장)`;
-    return `사진마다 설명(선택)을 적을 수 있어요.`;
-  }, [hasImages, max]);
+  const helperText = `클릭하거나 드래그하여 최대 ${max}장까지 업로드할 수 있어요.`;
 
   return (
     <div className="space-y-3">
-      {/* Dropzone / Button */}
       <div
         className="rounded-2xl border border-neutral-200 bg-white p-4"
         onDragOver={(e) => e.preventDefault()}
@@ -84,7 +80,6 @@ export default function ImageUploader({
         />
       </div>
 
-      {/* Images list (✅ 세로 + 캡션 입력) */}
       {hasImages ? (
         <div className="space-y-5">
           {images.map((file, idx) => (
@@ -92,7 +87,7 @@ export default function ImageUploader({
               key={file.preview}
               className="rounded-2xl border border-neutral-200 bg-white p-3"
             >
-              {/* preview */}
+              
               <div className="relative aspect-16/10 w-full overflow-hidden rounded-2xl bg-neutral-100">
                 <Image
                   src={file.preview}
@@ -116,7 +111,6 @@ export default function ImageUploader({
                 </div>
               </div>
 
-              {/* caption input */}
               <div className="mt-3 space-y-2">
                 <label className="block text-xs font-medium text-neutral-700">
                   사진 설명(선택)

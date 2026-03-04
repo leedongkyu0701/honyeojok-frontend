@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type StarRatingProps = {
-  value: number; // 0~5
+  value: number;
   onChange: (value: number) => void;
-  max?: number; // default 5
+  max?: number;
   disabled?: boolean;
 };
 
@@ -33,18 +34,20 @@ export default function StarRating({
           aria-label={`${star}점`}
         >
           <Star
-            className={[
+            className={cn(
               "h-6 w-6 transition-transform",
               !disabled ? "hover:scale-110" : "",
               star <= displayValue
                 ? "fill-yellow-400 text-yellow-400"
                 : "text-neutral-300",
-            ].join(" ")}
+            )}
           />
         </button>
       ))}
 
-      <span className="ml-2 text-sm text-neutral-500">{value} / {max}</span>
+      <span className="ml-2 text-sm text-neutral-500">
+        {value} / {max}
+      </span>
     </div>
   );
 }

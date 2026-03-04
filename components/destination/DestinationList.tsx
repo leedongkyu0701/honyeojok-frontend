@@ -7,6 +7,8 @@ import { fetchDestinations, type DestinationListResponse, type FetchDestinations
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
 import { useEffect } from "react";
+import { OverlayLoader } from "../common/OverlayLoader";
+import { keepPreviousData } from "@tanstack/react-query";
 
 const PAGE_SIZE = 12;
 
@@ -21,26 +23,30 @@ export default function DestinationList({
   page: number;
   onTotalPagesChange?: (total: number) => void;
 }) {
-  const { data, isLoading, isError } = useQuery<
+  const { data, isLoading, isError, isFetching, isPlaceholderData } = useQuery<
     DestinationListResponse<DestinationCardResponse>
   >({
     queryKey: ["destinations", { province, sort, page }],
     queryFn: () => fetchDestinations({ province, sort, take: PAGE_SIZE, page }),
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
-    onTotalPagesChange?.(data?.totalPages ?? 1);
-  }, [onTotalPagesChange, data?.totalPages]);
+   if (!isPlaceholderData && typeof data?.totalPages === "number") {
+    onTotalPagesChange?.(Math.max(1, data.totalPages));
+  }
+  }, [onTotalPagesChange, data?.totalPages, isPlaceholderData]);
 
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, index) => (
+        {Array.from({ length: PAGE_SIZE }).map((_, index) => (
           <Skeleton key={index} className="h-48" />
         ))}
       </div>
     );
   }
+
 
   if (isError) {
     return (
@@ -51,7 +57,7 @@ export default function DestinationList({
     );
   }
 
-  if (!(data?.data.length ?? 0)) {
+  if (!data?.data?.length) {
     return (
       <EmptyState
         title="조건에 맞는 여행지가 없어요."
@@ -61,16 +67,13 @@ export default function DestinationList({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+        <OverlayLoader show={isFetching && isPlaceholderData} /> 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {data!.data.map((destination) => (
+        {data.data.map((destination) => (
           <DestinationCard key={destination.id} destination={destination} />
         ))}
       </div>
-
-      <p className="text-sm text-neutral-500">
-        {data!.data.length}개 표시
-      </p>
     </div>
   );
 }

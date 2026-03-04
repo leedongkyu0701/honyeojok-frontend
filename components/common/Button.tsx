@@ -1,7 +1,8 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "secondary" | "outline" | "ghost";
+type Variant = "primary" | "secondary" | "outline" | "ghost" | "tab";
+
 type Size = "sm" | "md" | "lg";
 
 const variantClasses: Record<Variant, string> = {
@@ -13,6 +14,10 @@ const variantClasses: Record<Variant, string> = {
     "border border-neutral-200 text-neutral-900 hover:border-neutral-300 hover:bg-neutral-50 focus-visible:ring-neutral-400",
   ghost:
     "text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 focus-visible:ring-neutral-300",
+  tab:
+    "rounded-none text-sm font-semibold text-neutral-500 " +
+    "border-b-2 border-transparent hover:text-neutral-900 " +
+    "focus-visible:ring-neutral-300",
 };
 
 const sizeClasses: Record<Size, string> = {
@@ -36,7 +41,7 @@ export default function Button({
         "inline-flex items-center justify-center gap-2 rounded-full font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60",
         variantClasses[variant],
         sizeClasses[size],
-        className
+        className,
       )}
       {...props}
     />

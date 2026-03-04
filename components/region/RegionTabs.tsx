@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import Button from "../common/Button";
 
 type Tab = {
   label: string;
@@ -16,24 +17,26 @@ export default function DestinationTabs({ tabs }: { tabs: Tab[] }) {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-4 border-b border-neutral-200">
         {tabs.map((tab) => (
-          <button
+          <Button
             key={tab.value}
             onClick={() => setActive(tab.value)}
+            variant="tab"
+            size="sm"
+            role="tab"
+            aria-selected={active === tab.value}
             className={cn(
-              "pb-3 text-sm font-medium text-neutral-500 transition",
-              active === tab.value &&
-                "border-b-2 border-neutral-900 text-neutral-900"
+              active === tab.value && "border-neutral-900 text-neutral-900",
             )}
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
       <div>
         {tabs.map((tab) =>
           tab.value === active ? (
             <div key={tab.value}>{tab.content}</div>
-          ) : null
+          ) : null,
         )}
       </div>
     </div>

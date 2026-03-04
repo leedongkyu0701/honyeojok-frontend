@@ -25,7 +25,6 @@ export default function DestinationCard({
             fill
             sizes="(max-width: 640px) 85vw, (max-width: 1024px) 40vw, 24vw"
             className="object-cover transition duration-300 group-hover:scale-105"
-            priority={false}
           />
         </div>
 

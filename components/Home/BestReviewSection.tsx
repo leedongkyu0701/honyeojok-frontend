@@ -34,9 +34,9 @@ export default function BestReviewSection() {
         />
 
         {isLoading ? (
-          <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-40 w-full" />
+              <Skeleton key={index} className="h-80 w-full" />
             ))}
           </div>
         ) : null}
@@ -49,7 +49,7 @@ export default function BestReviewSection() {
         ) : null}
 
         {!isLoading && !isError && posts && posts.length > 0 ? (
-          <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
             {posts.map((post) => (
               <PostCard key={post.id} post={post} variant="best" />
             ))}

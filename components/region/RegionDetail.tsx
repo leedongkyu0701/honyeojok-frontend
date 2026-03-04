@@ -51,8 +51,7 @@ export default function RegionDetailPage({ region }: { region: string }) {
     <div className="space-y-12 pb-20">
       <div className="space-y-2">
         <RegionHero data={regionDetail} />
-
-        {/* ✅ 이미지 하단 크레딧 */}
+        
         {creditText ? (
           <Container>
             <p className="text-xs text-muted-foreground text-right">

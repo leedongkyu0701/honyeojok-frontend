@@ -12,7 +12,7 @@ export type SpotListResponse<T> = {
   totalPages: number;
 };
 
-// 1) 상세
+
 export async function fetchSpotDetail(id: number): Promise<SpotDetailResponse> {
   const response = await fetchClient(`/spots/${id}`, {
     skipAuth: true,
@@ -22,7 +22,6 @@ export async function fetchSpotDetail(id: number): Promise<SpotDetailResponse> {
   return response.json();
 }
 
-// 2) 핫스팟 묶음
 export async function fetchHotSpots(): Promise<FindHotSpotsResponse> {
   const response = await fetchClient(`/spots/hot`, {
     skipAuth: true,
@@ -32,7 +31,6 @@ export async function fetchHotSpots(): Promise<FindHotSpotsResponse> {
   return response.json();
 }
 
-// 3) 추천 스팟 (카드 배열)
 export async function fetchRecommendedSpots(): Promise<SpotCardResponse[]> {
   const response = await fetchClient(`/spots/recommended`, {
     skipAuth: true,
@@ -42,7 +40,6 @@ export async function fetchRecommendedSpots(): Promise<SpotCardResponse[]> {
   return response.json();
 }
 
-// 4) 지역별 스팟 리스트
 export async function fetchSpotsByRegion(
   region: string,
   params: {
@@ -62,7 +59,7 @@ export async function fetchSpotsByRegion(
 
   const response = await fetchClient(
     `/spots/region/${encodeURIComponent(region)}${qs ? `?${qs}` : ""}`,
-    { skipAuth: true },
+    { skipAuth: true, withCredentials: false },
   );
 
   await parseApiError(response);

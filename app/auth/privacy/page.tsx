@@ -2,14 +2,14 @@ import LegalLayout from "@/components/auth/LegalLayout";
 import LegalSection from "@/components/auth/LegalSection";
 
 export const metadata = {
-  title: "개인정보처리방침 | 혼여",
+  title: "개인정보처리방침",
 };
 
 export default function PrivacyPage() {
   return (
     <LegalLayout title="개인정보처리방침" updatedAt="2026-01-29">
       <LegalSection title="1. 개인정보의 처리 목적">
-        혼여(이하 “서비스”)는 다음 목적을 위해 개인정보를 처리합니다.
+        혼여족(이하 “서비스”)는 다음 목적을 위해 개인정보를 처리합니다.
         <ul className="mt-2 list-disc pl-5 space-y-1">
           <li>회원 식별 및 로그인 처리(소셜 로그인 포함)</li>
           <li>커뮤니티 글/댓글 작성, 북마크 등 서비스 기능 제공</li>
@@ -44,7 +44,8 @@ export default function PrivacyPage() {
       <LegalSection title="3. 개인정보의 처리 및 보유 기간">
         서비스는 원칙적으로{" "}
         <span className="font-medium">회원 탈퇴 시 지체 없이 파기</span>합니다.
-        다만 다음의 경우는 예외로 보관할 수 있습니다.
+        다만 게시물 등 서비스 운영상 필요한 정보는 개인 식별이 불가능하도록 처리(익명화)한 후 보관할 수 있으며,
+         다음의 경우는 예외로 보관할 수 있습니다.
         <ul className="mt-2 list-disc pl-5 space-y-1">
           <li>부정 이용 방지 및 분쟁 대응: 최소 범위에서 일정 기간 보관</li>
           <li>관계 법령에 따라 보관이 필요한 경우: 해당 법령에서 정한 기간</li>

@@ -41,6 +41,7 @@ export type SpotDetailResponse = {
 
   description: string;
   honyeoTip: string | null;
+  summary: string;
 
   imageUrl: string | null;
   imageSource: ImageSource | null;
@@ -65,6 +66,7 @@ export type SpotMapResponse = {
 
   lat: number | null;
   lng: number | null;
+  minDistance: number;
 };
 
 export type FindHotSpotsResponse = {

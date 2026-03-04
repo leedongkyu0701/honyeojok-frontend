@@ -1,4 +1,3 @@
-// src/components/spot/SpotList.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -10,6 +9,8 @@ import { fetchSpotsByRegion } from "@/lib/api/spot/api";
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
 import SpotCard from "./SpotCard";
+import { OverlayLoader } from "../common/OverlayLoader";
+import { keepPreviousData } from "@tanstack/react-query";
 
 export default function SpotList({
   region,
@@ -28,6 +29,8 @@ export default function SpotList({
     data: results,
     isLoading,
     isError,
+    isFetching,
+    isPlaceholderData,
   } = useQuery({
     queryKey: ["spots", { region, category, page, take }],
     queryFn: () =>
@@ -36,14 +39,14 @@ export default function SpotList({
         page,
         take,
       }),
-    staleTime: 1000 * 15,
-    gcTime: 1000 * 60 * 10,
-    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
-    onTotalPagesChange?.(results?.totalPages ?? 1);
-  }, [onTotalPagesChange, results?.totalPages]);
+       if (!isPlaceholderData && typeof results?.totalPages === "number") {
+    onTotalPagesChange?.(Math.max(1, results.totalPages));
+  }
+  }, [onTotalPagesChange, results?.totalPages, isPlaceholderData]);
 
   if (isLoading) {
     return (
@@ -76,11 +79,12 @@ export default function SpotList({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+    <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+        <OverlayLoader show={isFetching && isPlaceholderData} /> 
       <ul className="divide-y divide-neutral-100">
         {results!.data.map((spot: SpotCardResponse) => (
           <li key={spot.id} className="p-4">
-            <SpotCard spot={spot} variant="row" />
+            <SpotCard spot={spot} variant="list" />
           </li>
         ))}
       </ul>

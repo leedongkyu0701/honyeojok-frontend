@@ -3,6 +3,7 @@
 import type { CategoryType } from "@/types/community";
 import { ProvinceGroup } from "@/types/util";
 import { cn } from "@/lib/utils";
+import Button from "../common/Button";
 
 const items: { label: string; value: CategoryType; desc?: string }[] = [
   { label: "전체", value: "ALL", desc: "전체 글" },
@@ -24,8 +25,6 @@ const provinceItems: { label: string; value: ProvinceGroup | null }[] = [
 type Props = {
   value: CategoryType;
   onChange: (next: CategoryType) => void;
-
-  // ✅ 추가
   province: ProvinceGroup | null;
   onChangeProvince: (next: ProvinceGroup | null) => void;
 };
@@ -42,7 +41,6 @@ export default function CommunitySidebarDesktop({
     <aside className="hidden md:block">
       <div className="sticky top-24 h-[calc(100vh-6rem)]">
         <div className="h-full overflow-auto rounded-2xl border border-neutral-200 bg-white p-4">
-          {/* 게시판 */}
           <div className="mb-3">
             <p className="text-sm font-semibold text-neutral-900">게시판</p>
             <p className="mt-1 text-xs text-neutral-500">
@@ -54,15 +52,11 @@ export default function CommunitySidebarDesktop({
             {items.map((it) => {
               const active = value === it.value;
               return (
-                <button
+                <Button
                   key={it.value}
                   onClick={() => onChange(it.value)}
-                  className={cn(
-                    "w-full rounded-xl px-3 py-2 text-left transition",
-                    active
-                      ? "bg-neutral-900 text-white"
-                      : "text-neutral-700 hover:bg-neutral-50",
-                  )}
+                  variant={active ? "primary" : "outline"}
+                  className="mb-2"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{it.label}</span>
@@ -77,12 +71,12 @@ export default function CommunitySidebarDesktop({
                       {it.desc}
                     </div>
                   )}
-                </button>
+                </Button>
               );
             })}
           </nav>
 
-          {/* ✅ 리뷰일 때만: 지역 필터 */}
+
           {isReview && (
             <div className="mt-6 pt-5 border-t border-neutral-200">
               <div className="mb-3">
@@ -96,18 +90,15 @@ export default function CommunitySidebarDesktop({
                 {provinceItems.map((p) => {
                   const active = province === p.value;
                   return (
-                    <button
+                    <Button
                       key={p.value ?? "ALL"}
                       onClick={() => onChangeProvince(p.value)}
-                      className={cn(
-                        "w-full rounded-xl px-3 py-2 text-left transition",
-                        active
-                          ? "bg-neutral-900 text-white"
-                          : "text-neutral-700 hover:bg-neutral-50",
-                      )}
+                      variant={active ? "primary" : "outline"}
+                      size="sm"
+                      className="w-full rounded-xl px-3 py-2 text-left transition"
                     >
                       <span className="text-sm font-medium">{p.label}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

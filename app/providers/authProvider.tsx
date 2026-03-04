@@ -31,7 +31,7 @@ export default function AuthProvider({
         }
       }
       finally {
-        setAuthInitialized(true); // 초기화 완료 표시 (성공/실패 상관없이)
+        setAuthInitialized(true);
       }
     };
 

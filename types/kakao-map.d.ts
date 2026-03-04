@@ -1,4 +1,3 @@
-// src/types/kakao-maps.d.ts
 export {};
 
 declare global {

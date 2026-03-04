@@ -3,6 +3,7 @@
 import type { CategoryType } from "@/types/community";
 import { ProvinceGroup } from "@/types/util";
 import { cn } from "@/lib/utils";
+import Button from "../common/Button";
 
 const tabs: { label: string; value: CategoryType }[] = [
   { label: "전체", value: "ALL" },
@@ -24,8 +25,6 @@ const provinceItems: { label: string; value: ProvinceGroup | null }[] = [
 type Props = {
   value: CategoryType;
   onChange: (next: CategoryType) => void;
-
-  // ✅ 추가
   province: ProvinceGroup | null;
   onChangeProvince: (next: ProvinceGroup | null) => void;
 };
@@ -40,43 +39,37 @@ export default function CommunityTabsMobile({
 
   return (
     <div className="md:hidden">
-      {/* 탭 */}
       <div className="flex flex-wrap gap-6 border-b border-neutral-200">
         {tabs.map((tab) => (
-          <button
+          <Button
             key={tab.value}
             onClick={() => onChange(tab.value)}
+            variant="tab"
+            size="sm"
             className={cn(
-              "pb-3 border-b-2 text-sm font-medium transition",
-              value === tab.value
-                ? "border-neutral-900 text-neutral-900"
-                : "border-transparent text-neutral-500 hover:text-neutral-900 hover:border-neutral-300",
+              tab.value === value && "border-neutral-900 text-neutral-900",
             )}
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
       </div>
 
-      {/* ✅ 리뷰일 때만: 지역 칩 */}
       {isReview && (
-        <div className="mt-3 -mx-4 px-4">
-          <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="mt-3 px-4">
+          <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-1">
             {provinceItems.map((p) => {
               const active = province === p.value;
               return (
-                <button
+                <Button
                   key={p.value ?? "ALL"}
                   onClick={() => onChangeProvince(p.value)}
-                  className={cn(
-                    "shrink-0 rounded-full border px-3 py-1.5 text-sm transition",
-                    active
-                      ? "border-neutral-900 bg-neutral-900 text-white"
-                      : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300",
-                  )}
+                  variant={active ? "primary" : "outline"}
+                  size="sm"
+                  className="shrink-0"
                 >
                   {p.label}
-                </button>
+                </Button>
               );
             })}
           </div>

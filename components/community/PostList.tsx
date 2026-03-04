@@ -12,7 +12,7 @@ import Pagination from "@/components/common/Pagination";
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
 
-import { useCommunityFilters } from "@/lib/useCommunityFilters";
+import { useCommunityFilters } from "@/hooks/useCommunityFilters";
 
 const TAKE = 10;
 
@@ -20,10 +20,9 @@ export default function PostList() {
   const { state, setPage, setQuery } = useCommunityFilters();
   const { q, page, type, province } = state;
 
-  // 검색 input은 로컬 상태(타이핑 UX용)
+
   const [searchTerm, setSearchTerm] = useState(q);
 
-  // URL q가 바뀌면(뒤로가기/탭전환 등) input도 동기화
   useEffect(() => {
     setSearchTerm(q);
   }, [q]);
@@ -45,11 +44,11 @@ export default function PostList() {
         province,
       }),
     placeholderData: keepPreviousData,
-    staleTime: 30_000,
-    refetchOnWindowFocus: false,
+    staleTime:30_000,
+    gcTime: 60_000,
   });
 
-  const posts = useMemo(() => data?.posts ?? [], [data?.posts]);
+  const posts = data?.posts ?? [];
   const totalPages = data?.totalPages ?? 1;
 
   const handleSearch = (event: React.FormEvent) => {
@@ -78,8 +77,8 @@ export default function PostList() {
 
   return (
     <div className="space-y-6">
-      {/* 검색 */}
-      <form
+
+       <form
         onSubmit={handleSearch}
         className="flex flex-wrap gap-3 rounded-2xl border border-neutral-200 bg-white p-4"
       >
@@ -103,7 +102,6 @@ export default function PostList() {
         </div>
       </form>
 
-      {/* 목록 */}
       {posts.length === 0 ? (
         <EmptyState
           title="게시글이 없습니다."

@@ -6,8 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import SpotCategorySection from "@/components/spot/SpotCategory";
 import HotSpotList from "@/components/spot/HotSpotList";
 
-import type { FindHotSpotsResponse, SpotCardResponse } from "@/types/spots";
-import { SpotCategory } from "@/types/spots";
+import type {
+  FindHotSpotsResponse,
+  SpotCardResponse,
+  SpotCategory,
+} from "@/types/spots";
+import { SpotCategory as SpotCategoryEnum } from "@/types/spots";
 
 import { fetchHotSpots } from "@/lib/api/spot/api";
 
@@ -15,60 +19,53 @@ import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
-
-type HotKey = "nature" |"activity" | "food" | "cafe" | "drink" | "etc";
-
-const CATEGORY_TO_HOT_KEY: Record<SpotCategory, HotKey> = {
-  nature: "nature",
-  activity: "activity",
-  food: "food",
-  cafe: "cafe",
-  drink: "drink",
-  etc: "etc",
-};
-
-const HOT_SECTIONS = [
-  ["nature", "자연"],
-  ["activity", "액티비티"],
-  ["food", "맛집"],
-  ["cafe", "카페"],
-  ["drink", "술/바"],
-  ["etc", "기타"],
-] as const;
+import { SPOT_CATEGORY_ITEMS } from "@/lib/spotCategory";
+import Badge from "../common/Badge";
 
 export default function HotSpotView() {
   const { data, isLoading, isError } = useQuery<FindHotSpotsResponse>({
     queryKey: ["hotSpots"],
     queryFn: fetchHotSpots,
-    staleTime: 1000 * 60,
-    refetchOnWindowFocus: false,
   });
 
   const [category, setCategory] = useState<SpotCategory | null>(
-    SpotCategory.NATURE,
+    SpotCategoryEnum.NATURE,
   );
 
   const items = useMemo<SpotCardResponse[]>(() => {
-    if (!data) return [];
-    if (category === null) return [];
-    const key = CATEGORY_TO_HOT_KEY[category];
-    return (data[key] ?? []) as SpotCardResponse[];
+    if (!data || category === null) return [];
+    return (data[category] ?? []) as SpotCardResponse[];
   }, [data, category]);
+
+  const sections = useMemo(() => {
+    if (!data) return [];
+    return SPOT_CATEGORY_ITEMS.filter((x) => x.value !== null)
+      .map(({ value, label }) => {
+        const list = (data[value as SpotCategory] ?? []) as SpotCardResponse[];
+        return { key: value as SpotCategory, label, list };
+      })
+      .filter((s) => s.list.length > 0);
+  }, [data]);
 
   if (isLoading) {
     return (
-      <div className="py-10">
-        <Container className="space-y-6">
-          <SectionHeader
-            title="핫한 스팟"
-            description="전체 지역 인기 스팟 모음"
-          />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-48" />
-            ))}
-          </div>
-        </Container>
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 rounded-2xl" />
+          ))}
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div
+              key={i}
+              className="border-b border-neutral-100 p-4 last:border-b-0"
+            >
+              <Skeleton className="h-16" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -88,7 +85,7 @@ export default function HotSpotView() {
 
   return (
     <div className="py-10">
-      <Container className="space-y-6">
+      <Container className="space-y-6 ">
         <SectionHeader
           title="핫한 스팟"
           description="전체 지역에서 카테고리별 상위 스팟을 모았어요."
@@ -101,27 +98,23 @@ export default function HotSpotView() {
           </div>
         </div>
 
-        {category === null ? (
-          <div className="space-y-10">
-            {HOT_SECTIONS.map(([key, label]) => {
-              const list = (data[key] ?? []) as SpotCardResponse[];
-              if (!list.length) return null;
+        {category === null ? ( // 전체 선택시 섹션별로 보여주기
+          <div className="space-y-20 mt-20">
+            {sections.map(({ key, label, list }) => (
+              <section key={key} className="space-y-6">
+                <div className="flex items-end gap-2">
+                  <h2 className="pl-2 text-xl font-semibold text-neutral-900">
+                    {label}
+                  </h2>
 
-              return (
-                <section key={key} className="space-y-4">
-                  <div className="flex items-end justify-between">
-                    <h2 className="text-lg font-semibold text-neutral-900">
-                      {label}
-                    </h2>
-                    <span className="text-xs text-neutral-500">
-                      {Math.min(list.length, 10)}개
-                    </span>
-                  </div>
+                  <Badge className="shrink-0">
+                    TOP {Math.min(list.length, 10)}
+                  </Badge>
+                </div>
 
-                  <HotSpotList spots={list} limit={10} topN={3} showRank />
-                </section>
-              );
-            })}
+                <HotSpotList spots={list} limit={10} topN={3} showRank />
+              </section>
+            ))}
           </div>
         ) : items.length ? (
           <HotSpotList spots={items} limit={10} topN={3} showRank />

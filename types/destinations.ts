@@ -38,12 +38,7 @@ export type DestinationDetailResponse = {
   summary: string;
   description: string;
 
-  difficulty: {
-    food: number;
-    transport: number;
-    safety: number;
-    loneliness: number;
-  };
+  difficulty: HonyeoDifficulty;
 
   tags: TagResponse[];
   routes: TripRouteCardResponse[];
@@ -54,4 +49,12 @@ export type DestinationSearchResponse = {
   id: number;
   slug: string;
   name: string;
+};
+
+
+export type HonyeoDifficulty = {
+  food: number;
+  transport: number;
+  safety: number;
+  loneliness: number;
 };

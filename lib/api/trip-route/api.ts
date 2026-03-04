@@ -35,7 +35,7 @@ export async function fetchTripRouteDetail(
   slug: string,
 ): Promise<TripRouteDetailResponse> {
   const response = await fetchClient(
-    `/trip-routes/${encodeURIComponent(region)}/${encodeURIComponent(slug)}`,
+    `/trip-routes/region/${encodeURIComponent(region)}/${encodeURIComponent(slug)}`,
   );
   await parseApiError(response);
   return response.json();
@@ -71,7 +71,7 @@ export async function addBookmarkTripRoute(
 ): Promise<BookmarkTripRouteResponse> {
   const response = await fetchClient(
     `/trip-routes/bookmark/add/${encodeURIComponent(slug)}`,
-    { method: "POST" },
+    { method: "PUT" },
   );
   await parseApiError(response);
   return response.json();
@@ -82,7 +82,7 @@ export async function removeBookmarkTripRoute(
 ): Promise<BookmarkTripRouteResponse> {
   const response = await fetchClient(
     `/trip-routes/bookmark/remove/${encodeURIComponent(slug)}`,
-    { method: "POST" },
+    { method: "DELETE" },
   );
   await parseApiError(response);
   return response.json();
@@ -103,7 +103,10 @@ export async function fetchNearbyTripRoutes(
   const response = await fetchClient(
     `/trip-routes/nearby-spots/${encodeURIComponent(routeSlug)}${
       queryString ? `?${queryString}` : ""
-    }`,
+    }`,{
+      skipAuth: true,
+      withCredentials: false,
+    }
   );
   await parseApiError(response);
   return response.json();

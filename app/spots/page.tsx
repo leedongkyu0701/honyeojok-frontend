@@ -2,7 +2,7 @@ import HotSpotView from "@/components/spot/HotSpotView";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "핫한 스팟 | 혼여족",
+  title: "추천 스팟",
   description: "혼여족을 위한 추천 여행지",
 };
 

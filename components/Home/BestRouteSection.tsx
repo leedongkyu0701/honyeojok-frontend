@@ -17,23 +17,31 @@ export default function BestRouteSection() {
   });
 
   if (isLoading) {
-    return (
-      <section className="py-12">
-        <Container className="space-y-6">
-          <SectionHeader
-            title="인기 여행 루트"
-            description="지금 가장 많이 저장되는 루트를 확인하세요."
-          />
-          <div className="grid gap-4 lg:grid-cols-12 lg:grid-rows-2 lg:auto-rows-fr">
-            <Skeleton className="h-80 lg:col-span-6 lg:row-span-2" />
+  return (
+    <section className="py-12">
+      <Container className="space-y-6">
+        <SectionHeader
+          title="인기 여행 루트"
+          description="지금 가장 많이 저장되는 루트를 확인하세요."
+        />
+
+        <div className="grid gap-4 lg:grid-cols-12 lg:grid-rows-2 lg:auto-rows-fr">
+          <div className="lg:col-span-6 lg:row-span-2">
+            <Skeleton className="h-80" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 lg:contents">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-36 lg:col-span-3" />
+              <div key={i} className="lg:col-span-3">
+                <Skeleton className="h-36" />
+              </div>
             ))}
           </div>
-        </Container>
-      </section>
-    );
-  }
+        </div>
+      </Container>
+    </section>
+  );
+}
 
   if (isError || !data || data.length === 0) {
     return (
@@ -56,22 +64,21 @@ export default function BestRouteSection() {
   const list = rest.slice(0, 4);
 
   return (
-    <section className="py-12">
+    <section className="py-12 bg-neutral-50">
       <Container className="space-y-6">
         <SectionHeader
           title="인기 여행 루트"
           description="지금 가장 많이 저장되는 루트를 확인하세요."
         />
 
-        <div className="grid gap-4 lg:grid-cols-12 lg:grid-rows-2 lg:auto-rows-fr">
+        <div className="grid gap-4 lg:grid-cols-12 lg:grid-rows-2 lg:auto-rows-fr ">
           <div className="lg:col-span-6 lg:row-span-2">
             <RouteCard route={featured} variant="featured" />
           </div>
 
-          {/* lg 미만에서는 2열, lg 이상에서는 12컬럼에 자연 합류 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:contents">
+          <div className="grid grid-cols-2 gap-4 lg:contents">
             {list.map((route) => (
-              <div key={route.id} className="lg:col-span-3">
+              <div key={route.id} className="lg:col-span-3 ">
                 <RouteCard route={route} variant="default" />
               </div>
             ))}

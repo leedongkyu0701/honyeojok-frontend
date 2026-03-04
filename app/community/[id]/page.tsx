@@ -1,8 +1,57 @@
 import PostDetail from "@/components/community/PostDetail";
 import Container from "@/components/common/Container";
 import EmptyState from "@/components/common/EmptyState";
+import type { Metadata } from "next";
+import { fetchPostDetail } from "@/lib/api/community/api";
+import { notFound } from "next/navigation";
+import { ApiError } from "@/lib/apiError";
 
-export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const postId = parseInt(id, 10);
+    if (!Number.isFinite(postId) || postId <= 0) {
+      notFound();
+    }
+
+    const post = await fetchPostDetail(postId);
+    const title = `${post.title}`;
+    const description = `${post.content.slice(0, 100)}...`;
+
+    return {
+      title,
+      description,
+      alternates: {
+        canonical: `/community/${postId}`,
+      },
+      openGraph: {
+        title,
+        description,
+        images: [
+          {
+            url: post.images?.[0]?.url ?? "/og.png",
+            alt: post.title,
+          },
+        ],
+      },
+    };
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      notFound();
+    }
+    throw error;
+  }
+}
+
+export default async function PostDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const postId = parseInt(id, 10);
   return (

@@ -1,7 +1,6 @@
-// src/app/spots/[region]/SpotView.tsx (또는 기존 위치)
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import Container from "@/components/common/Container";
@@ -12,6 +11,7 @@ import SpotList from "@/components/spot/SpotList";
 import type { SpotCategory } from "@/types/spots";
 import SpotCategorySection from "./SpotCategory";
 import { isSpotCategory } from "@/lib/spotCategory";
+import { usePaginationGuard } from "@/hooks/usePaginationGuard";
 
 export default function SpotView({ region }: { region: string }) {
   const searchParams = useSearchParams();
@@ -23,28 +23,47 @@ export default function SpotView({ region }: { region: string }) {
     return isSpotCategory(rawCategory) ? rawCategory : null;
   }, [rawCategory]);
 
-  const rawPage = Number(searchParams.get("page") ?? 1);
-  const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+  const rawPage = searchParams.get("page");
+  const page = Math.max(
+    1,
+    Number.isFinite(Number(rawPage)) ? Number(rawPage) : 1,
+  );
 
   const [totalPages, setTotalPages] = useState(1);
 
-  const setParams = (next: { category?: SpotCategory | null; page?: number }) => {
-    const params = new URLSearchParams(searchParams.toString());
+  const setParams = useCallback(
+    (next: { category?: SpotCategory | null; page?: number }) => {
+      const params = new URLSearchParams(searchParams.toString());
 
-    if ("category" in next) {
-      const v = next.category;
-      if (v) params.set("category", v);
-      else params.delete("category");
-      // category 변경 시 page 리셋
-      params.set("page", "1");
-    }
+      const isCategoryChange = "category" in next;
+      const isPageChange = "page" in next;
 
-    if ("page" in next && typeof next.page === "number") {
-      params.set("page", String(next.page));
-    }
+      if (isCategoryChange) {
+        const v = next.category;
+        if (v) params.set("category", v);
+        else params.delete("category");
+        params.set("page", "1");
+      }
 
-    router.push(`/spots/${region}?${params.toString()}`, { scroll: false });
-  };
+      if (isPageChange && typeof next.page === "number") {
+        params.set("page", String(next.page));
+      }
+
+      const url = `?${params.toString()}`;
+      if (isPageChange && !isCategoryChange) {
+        router.push(url);
+      } else {
+        router.replace(url, { scroll: false });
+      }
+    },
+    [router, searchParams],
+  );
+
+  usePaginationGuard({
+    totalPages,
+    page,
+    onOverflow: (nextPage) => setParams({ page: nextPage }),
+  });
 
   return (
     <div className="py-10">

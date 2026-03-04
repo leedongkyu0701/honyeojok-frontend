@@ -8,7 +8,7 @@ export default function CommentForm({
   onSubmit,
   onCancel,
   placeholder = "댓글을 남겨보세요.",
-  submitLabel = "댓글 등록",
+  submitLabel = "등록",
   isSubmitting = false,
   compact = false,
 }: {

@@ -1,4 +1,3 @@
-
 export type PostType = "REVIEW" | "FREE" | "QUESTION";
 
 export type CategoryType = "ALL" | PostType;
@@ -13,11 +12,11 @@ export type PostCardResponse = {
   title: string;
 
   region?: string;
+  regionName?: string;
 
-  // 서버 Date → JSON으로 오면 string(ISO)임
   createdAt: string;
 
-  nickName?: string;
+  nickName: string;
 
   likeCount: number;
   viewCount: number;
@@ -32,10 +31,11 @@ export type PostDetailResponse = {
   title: string;
 
   region?: string;
+  regionName?: string;
 
   createdAt: string;
 
-  nickName?: string;
+  nickName: string;
 
   content: string;
 

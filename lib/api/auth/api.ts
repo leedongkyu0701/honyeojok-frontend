@@ -16,3 +16,10 @@ export async function refreshToken() {
     await parseApiError(response);
     return response.json();
 }
+
+export async function withdraw() {
+    await fetchClient(`/auth/withdraw`, {
+        method: "POST"
+    });
+    return;
+}

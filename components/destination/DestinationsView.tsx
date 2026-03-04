@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
@@ -8,8 +8,14 @@ import DestinationList from "@/components/destination/DestinationList";
 import Pagination from "@/components/common/Pagination";
 import { ProvinceGroup } from "@/types/util";
 import type { FetchDestinationsParams } from "@/lib/api/destination/api";
+import Button from "../common/Button";
+import { cn } from "@/lib/utils";
+import { usePaginationGuard } from "@/hooks/usePaginationGuard";
 
-const provinces = [
+const provinces: Array<{
+  label: string;
+  value: ProvinceGroup | "";
+}> = [
   { label: "전체", value: "" },
   { label: "서울/경기", value: ProvinceGroup.SEOUL_GYEONGGI },
   { label: "강원", value: ProvinceGroup.GANGWON },
@@ -19,7 +25,10 @@ const provinces = [
   { label: "제주", value: ProvinceGroup.JEJU },
 ] as const;
 
-const sorts: Array<{ label: string; value: NonNullable<FetchDestinationsParams["sort"]> }> = [
+const sorts: Array<{
+  label: string;
+  value: NonNullable<FetchDestinationsParams["sort"]>;
+}> = [
   { label: "인기순", value: "rank" },
   { label: "평점순", value: "score" },
 ];
@@ -29,22 +38,37 @@ export default function DestinationsView() {
   const router = useRouter();
 
   const province = searchParams.get("province") ?? "";
-  const sort = (searchParams.get("sort") as FetchDestinationsParams["sort"]) ?? "rank";
-  const page = Number(searchParams.get("page") ?? 1);
+  const rawSort = searchParams.get("sort");
+  const sort = rawSort === "score" || rawSort === "rank" ? rawSort : "rank";
+  const rawPage = searchParams.get("page");
+  const page = Math.max(
+    1,
+    Number.isFinite(Number(rawPage)) ? Number(rawPage) : 1,
+  );
 
   const [totalPages, setTotalPages] = useState(1);
 
-  const updateParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+  const updateParams = useCallback(
+    (key: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value !== "") params.set(key, value);
+      else params.delete(key);
 
-    if (value) params.set(key, value);
-    else params.delete(key);
+      if (key !== "page") params.set("page", "1");
 
-    // 필터/정렬 변경 시 페이지는 1로
-    if (key !== "page") params.set("page", "1");
+      const url = `?${params.toString()}`;
 
-    router.push(`/destinations?${params.toString()}`);
-  };
+      if (key === "page") router.push(url);
+      else router.replace(url, { scroll: false });
+    },
+    [router, searchParams],
+  );
+
+  usePaginationGuard({
+    totalPages,
+    page,
+    onOverflow: (nextPage) => updateParams("page", String(nextPage)),
+  });
 
   const activeProvinceLabel = useMemo(() => {
     const found = provinces.find((p) => p.value === province);
@@ -59,22 +83,21 @@ export default function DestinationsView() {
           description="혼행에 최적화된 지역을 골라보세요."
         />
 
-        {/* ✅ 상단 필터 바 */}
-        <div className="rounded-2xl border border-neutral-200 bg-white p-4 space-y-4">
-          {/* Province chips */}
+        <div className="rounded-2xl border border-neutral-200 bg-white p-4 px-6 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs text-neutral-500">지역</p>
-              <p className="text-sm font-medium text-neutral-900">{activeProvinceLabel}</p>
+              <p className="text-sm font-medium text-neutral-900">
+                {activeProvinceLabel}
+              </p>
             </div>
 
-            {/* Sort */}
-            <div className="shrink-0">
-              <label className="flex flex-col text-xs text-neutral-500">
-                정렬
+            <div className="shrink-0 ">
+              <label>
+                <span className="sr-only">정렬</span>
                 <select
-                  className="mt-2 rounded-xl border border-neutral-200 px-3 py-2 text-sm text-neutral-900"
-                  value={sort ?? "rank"}
+                  className="rounded-xl border border-neutral-200 px-3 py-2 text-sm text-neutral-900"
+                  value={sort}
                   onChange={(e) => updateParams("sort", e.target.value)}
                 >
                   {sorts.map((o) => (
@@ -91,26 +114,26 @@ export default function DestinationsView() {
             {provinces.map((p) => {
               const active = p.value === province;
               return (
-                <button
+                <Button
                   key={p.value}
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => updateParams("province", p.value)}
-                  className={[
-                    "shrink-0 rounded-full border px-3 py-2 text-sm transition",
-                    active
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50",
-                  ].join(" ")}
                   aria-pressed={active}
+                  className={cn(
+                    "shrink-0 rounded-full",
+                    active &&
+                      "bg-neutral-900 text-white border-neutral-900 hover:bg-neutral-900",
+                  )}
                 >
                   {p.label}
-                </button>
+                </Button>
               );
             })}
           </div>
         </div>
 
-        {/* ✅ 리스트 (q 제거) */}
         <DestinationList
           province={province || null}
           sort={sort}

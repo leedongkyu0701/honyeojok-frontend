@@ -19,10 +19,14 @@ import { useMutation } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useAuthStore } from "@/stores/auth.store";
 import { fetchNearbyTripRoutes } from "@/lib/api/trip-route/api";
-import { SpotCategory } from "@/types/spots";
+import { SpotCategory, SpotMapResponse } from "@/types/spots";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { MapPin } from "lucide-react";
 
 const DynamicTripRouteMap = dynamic(() => import("../Map/TripRouteMap"), {
   ssr: false,
+  loading: () => <Skeleton className="h-80 w-full rounded-2xl" />,
 });
 
 export default function TripRouteDetail({
@@ -32,16 +36,15 @@ export default function TripRouteDetail({
   region: string;
   slug: string;
 }) {
-  const authInitialized = useAuthStore((s) => s.authInitialized); // ✅ authInitialized 상태 가져오기
+  const authInitialized = useAuthStore((s) => s.authInitialized);
   const {
     data: route,
     isLoading,
     isError,
   } = useQuery<TripRouteDetailResponse>({
-    // ✅ 변경
     queryKey: ["trip-route", region, slug],
     queryFn: () => fetchTripRouteDetail(region, slug),
-    enabled: authInitialized, // ✅ authInitialized가 true일 때만 쿼리 실행
+    enabled: authInitialized,
   });
 
   const {
@@ -49,20 +52,16 @@ export default function TripRouteDetail({
     isLoading: nearbySpotsLoading,
     isError: nearbySpotsError,
   } = useQuery({
-    queryKey: ["nearby-spots"],
+    queryKey: ["trip-route", "nearby-spots", region, slug],
     queryFn: () =>
       fetchNearbyTripRoutes(slug, {
         radiusKm: 5,
         limit: 10,
       }),
-    enabled: !!route, // route 데이터가 있을 때만 실행
+    enabled: !!route && authInitialized,
   });
 
-  const defaultNearbyCats: SpotCategory[] = [
-    SpotCategory.FOOD,
-    SpotCategory.CAFE,
-    SpotCategory.DRINK,
-  ];
+  const defaultNearbyCats: SpotCategory[] = [SpotCategory.FOOD];
 
   const [enabledNearbyCats, setEnabledNearbyCats] =
     useState<SpotCategory[]>(defaultNearbyCats);
@@ -76,7 +75,7 @@ export default function TripRouteDetail({
   const nearbyFlatForMap = useMemo(() => {
     if (!nearbySpots) return [];
     const all = Object.values(nearbySpots).flat();
-    const uniq = new Map<number, (typeof all)[number]>();
+    const uniq = new Map<number, SpotMapResponse>();
     for (const s of all) uniq.set(s.id, s);
     return [...uniq.values()];
   }, [nearbySpots]);
@@ -90,7 +89,6 @@ export default function TripRouteDetail({
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  // ✅ 북마크 로직 그대로 (절대 수정 안 함)
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
       return await addBookmarkTripRoute(slug);
@@ -139,7 +137,7 @@ export default function TripRouteDetail({
           };
         },
       );
-      router.push("/auth"); // ✅ 로직 유지(요청대로 손대지 않음)
+      router.push("/auth");
     },
   });
 
@@ -164,12 +162,29 @@ export default function TripRouteDetail({
   if (isLoading || !authInitialized) {
     return (
       <div className="py-10">
-        <Container className="space-y-6">
-          <Skeleton className="h-64 w-full rounded-2xl" />
-          <Skeleton className="h-8 w-2/3" />
-          <Skeleton className="h-5 w-full" />
-          <Skeleton className="h-5 w-4/5" />
+        <Container className="space-y-8">
+          <div className="space-y-3">
+            <Skeleton className="h-9 w-1/3 rounded-lg" />
+            <Skeleton className="h-5 w-2/3 rounded-md" />
+          </div>
+
+          <Skeleton className="h-80 w-full rounded-2xl" />
+
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-20 rounded-full" />
+              <Skeleton className="h-9 w-20 rounded-full" />
+              <Skeleton className="h-9 w-20 rounded-full" />
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-24 rounded-full" />
+              <Skeleton className="h-8 w-24 rounded-full" />
+            </div>
+          </div>
+
           <Skeleton className="h-12 w-full rounded-xl" />
+
+          <Skeleton className="h-100 w-full rounded-xl" />
         </Container>
       </div>
     );
@@ -204,7 +219,6 @@ export default function TripRouteDetail({
   const tags = route.tags ?? [];
   const totalDays = route.days;
 
-  // ✅ 북마크 로직 그대로
   const handleSaveRoute = () => {
     if (route.bookmarkedByMe) {
       router.push("/auth");
@@ -214,10 +228,9 @@ export default function TripRouteDetail({
   };
 
   const honyeoCostLabel = (() => {
-    const cost = route.honyeoCost; // number | null | undefined (원 단위)
+    const cost = route.honyeoCost;
     if (!cost || cost <= 0) return null;
 
-    // 만원 단위 표기 (정수면 "10만원", 소수면 "12.5만원" 느낌)
     const man = cost / 10000;
     const manText = Number.isInteger(man)
       ? `${man}`
@@ -229,57 +242,78 @@ export default function TripRouteDetail({
     <div className="py-10">
       <Container className="space-y-8">
         <SectionHeader title={route.title} description={route.summary} />
-
         {activeDayEntity ? (
           <>
             <DynamicTripRouteMap
               items={activeDayEntity.items}
-              nearbySpots={nearbyFilteredForMap} // ✅ 맵에 전달
+              nearbySpots={nearbyFilteredForMap}
+              region={region}
             />
 
-            {/* ✅ 지도 아래 토글 버튼 */}
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant={
-                  enabledNearbyCats.includes(SpotCategory.FOOD)
-                    ? "primary"
-                    : "outline"
-                }
-                size="sm"
-                onClick={() => toggleNearbyCat(SpotCategory.FOOD)}
-              >
-                혼밥
-              </Button>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap gap-2 mb-6 lg:mb-0">
+                <Button
+                  type="button"
+                  variant={
+                    enabledNearbyCats.includes(SpotCategory.FOOD)
+                      ? "primary"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() => toggleNearbyCat(SpotCategory.FOOD)}
+                >
+                  혼밥 지도
+                </Button>
 
-              <Button
-                type="button"
-                variant={
-                  enabledNearbyCats.includes(SpotCategory.CAFE)
-                    ? "primary"
-                    : "outline"
-                }
-                size="sm"
-                onClick={() => toggleNearbyCat(SpotCategory.CAFE)}
-              >
-                카페
-              </Button>
+                <Button
+                  type="button"
+                  variant={
+                    enabledNearbyCats.includes(SpotCategory.CAFE)
+                      ? "primary"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() => toggleNearbyCat(SpotCategory.CAFE)}
+                >
+                  카페 지도
+                </Button>
 
-              <Button
-                type="button"
-                variant={
-                  enabledNearbyCats.includes(SpotCategory.DRINK)
-                    ? "primary"
-                    : "outline"
-                }
-                size="sm"
-                onClick={() => toggleNearbyCat(SpotCategory.DRINK)}
-              >
-                혼술
-              </Button>
+                <Button
+                  type="button"
+                  variant={
+                    enabledNearbyCats.includes(SpotCategory.DRINK)
+                      ? "primary"
+                      : "outline"
+                  }
+                  size="sm"
+                  onClick={() => toggleNearbyCat(SpotCategory.DRINK)}
+                >
+                  혼술 지도
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-700">
+                <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1">
+                  {totalDays}일 코스
+                </span>
+
+                {honyeoCostLabel ? (
+                  <span className="inline-flex items-center gap-1 mr-4 rounded-full border border-yellow-400 bg-yellow-50 px-3 py-1 text-yellow-600">
+                    {honyeoCostLabel}
+                  </span>
+                ) : null}
+
+                <div className="ml-auto">
+                  <BookmarkButton
+                    region={region}
+                    slug={route.slug}
+                    bookmarkedByMe={route.bookmarkedByMe}
+                    initialBookmarkCount={route.bookmarkCount}
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* (선택) 로딩/에러 표시 */}
             {nearbySpotsLoading ? (
               <div className="text-xs text-neutral-500">
                 근처 스팟 불러오는 중...
@@ -292,45 +326,21 @@ export default function TripRouteDetail({
           </>
         ) : null}
 
-        {/* 메타 */}
-        <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-700">
-          <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-3 py-1">
-            {totalDays}일 코스
-          </span>
-
-          {honyeoCostLabel ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-yellow-400 bg-yellow-50 px-3 py-1 text-yellow-600">
-              {honyeoCostLabel}
-            </span>
-          ) : null}
-
-          <BookmarkButton
-            region={region}
-            slug={route.slug}
-            bookmarkedByMe={route.bookmarkedByMe}
-            initialBookmarkCount={route.bookmarkCount}
-          />
-        </div>
-
-        {/* 태그 */}
         {tags.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {tags.map((t) => (
+            {tags.slice(0, 5).map((t) => (
               <Badge key={t.slug} className="rounded-full px-3 py-1">
                 #{t.label}
               </Badge>
             ))}
           </div>
         ) : null}
-
-        {/* 저장 버튼 */}
         <Button size="md" className="w-full" onClick={handleSaveRoute}>
           이 루트 저장하기
         </Button>
 
-        {/* 플랜 */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">일정</h2>
+          <h2 className="text-xl font-semibold">일정</h2>
 
           {daysPlanSorted.length === 0 ? (
             <EmptyState
@@ -339,29 +349,27 @@ export default function TripRouteDetail({
             />
           ) : (
             <>
-              {/* Day 탭 */}
               <div className="flex flex-wrap gap-2">
                 {daysPlanSorted.map((d) => {
                   const isActive = d.dayNumber === activeDayEntity?.dayNumber;
                   return (
-                    <button
+                    <Button
                       key={d.id}
-                      type="button"
                       onClick={() => setActiveDay(d.dayNumber)}
-                      className={[
-                        "rounded-full px-3 py-1 text-sm transition",
-                        isActive
-                          ? "bg-neutral-900 text-white"
-                          : "border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-100",
-                      ].join(" ")}
+                      variant="tab"
+                      size="sm"
+                      role="tab"
+                      aria-selected={isActive}
+                      className={cn(
+                        isActive && "border-neutral-900 text-neutral-900",
+                      )}
                     >
                       {d.dayNumber}일차
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
 
-              {/* Day 내용 */}
               {activeDayEntity ? (
                 <div className="rounded-2xl border border-neutral-200 bg-white p-4">
                   <div className="space-y-1">
@@ -378,68 +386,67 @@ export default function TripRouteDetail({
 
                   <div className="mt-4 space-y-3">
                     {activeDayEntity.items.map((item) => {
-                      // ✅ DTO 기준 nullable 처리
                       const hasTime = item.startTime || item.endTime;
-                      const hasSpotLink = !!item.spot?.id; // slug는 dto에 있지만 링크는 id로만도 가능
+                      const hasSpotLink = item.spot?.id;
 
                       return (
                         <div
                           key={item.id}
-                          className="flex gap-4 rounded-xl border border-neutral-200 p-4"
+                          className="flex flex-col gap-4 rounded-xl border border-neutral-200 p-4 lg:flex-row"
                         >
-                          {/* 순서 번호 */}
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white">
                             {item.order}
                           </div>
 
-                          {/* 썸네일 */}
                           {item.imageUrl ? (
-                            <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+                            <div className="relative w-full overflow-hidden rounded-lg bg-neutral-100 aspect-16/10 lg:h-24 lg:w-32 lg:shrink-0 lg:aspect-auto">
                               <Image
                                 src={item.imageUrl}
                                 alt={item.title}
                                 fill
                                 className="object-cover"
-                                sizes="128px"
+                                sizes="(max-width: 1024px) 100vw, 128px"
                               />
                             </div>
                           ) : null}
 
-                          {/* 텍스트 영역 */}
                           <div className="min-w-0 flex-1 space-y-2">
-                            {/* 제목 라인 */}
                             <div className="flex flex-wrap items-center gap-2">
-                              {/* ✅ type 뱃지 제거 (DTO에 없음) */}
                               <div className="truncate text-sm font-semibold">
                                 {item.title}
                               </div>
 
-                              <div className="text-xs text-neutral-400">
-                                혼여 - 추천레벨 {item.recommendedLevel}/5
+                              <div className="text-xs">
+                                {"⭐".repeat(Math.floor(item.recommendedLevel))}
                               </div>
 
-                              {/* ✅ spot 연결된 경우(있으면) 스팟 보기 */}
                               {hasSpotLink ? (
-                                <a
+                                <Link
                                   href={`/spots/${region}/${item.spot!.id}`}
-                                  className="inline-flex items-center rounded-full border border-neutral-200 bg-white px-2 py-0.5 text-[11px] text-neutral-600 hover:bg-neutral-50"
+                                  className="ml-auto shrink-0"
                                 >
-                                  상세 보기 →
-                                </a>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-neutral-600 font-normal"
+                                  >
+                                    상세보기 →
+                                  </Button>
+                                </Link>
                               ) : null}
                             </div>
 
-                            {/* 설명 */}
                             {item.description ? (
-                              <div className="line-clamp-2 text-sm text-neutral-600">
+                              <div className=" text-sm text-neutral-600">
                                 {item.description}
                               </div>
                             ) : null}
 
-                            {/* 메타 */}
                             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500">
-                              {/* ✅ address는 DTO에서 string (필수) */}
-                              <span>📍 {item.address}</span>
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {item.address}
+                              </span>
 
                               {hasTime ? (
                                 <span>
@@ -452,20 +459,13 @@ export default function TripRouteDetail({
                                 <a
                                   href={item.externalUrl}
                                   target="_blank"
-                                  rel="noreferrer"
-                                  className="text-neutral-700 underline underline-offset-2 hover:text-neutral-900"
+                                  rel="noopener noreferrer"
+                                  className="text-neutral-600 underline underline-offset-2 hover:text-neutral-900"
                                 >
-                                  링크
+                                  외부에서 보기 →
                                 </a>
                               ) : null}
                             </div>
-
-                            {/* ✅ 이미지 크레딧(있으면) */}
-                            {item.imageCredit ? (
-                              <div className="text-[11px] text-neutral-400">
-                                {item.imageCredit}
-                              </div>
-                            ) : null}
                           </div>
                         </div>
                       );

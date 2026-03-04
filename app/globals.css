@@ -1,10 +1,23 @@
 @import "tailwindcss";
+
 body {
+  margin: 0;
+
+
   font-family:
     -apple-system,
     BlinkMacSystemFont,
     "Apple SD Gothic Neo",
     "Noto Sans KR",
+    "Segoe UI",
+    Roboto,
     system-ui,
-    sans-serif;   
+    sans-serif;
+
+  color: rgb(23 23 23);
+  background-color: white;
+
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

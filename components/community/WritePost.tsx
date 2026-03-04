@@ -19,7 +19,7 @@ import ImageUploader, {
 import StarRating from "../common/StarRating";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
-const MAX_SIZE_MB = 5;
+const MAX_SIZE_MB = 6;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -40,12 +40,10 @@ export default function WritePost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // REVIEW 전용
   const [regionSlug, setRegionSlug] = useState("");
   const [regionQuery, setRegionQuery] = useState("");
   const [rating, setRating] = useState<number>(0);
 
-  // 이미지
   const [images, setImages] = useState<FileWithPreview[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -60,22 +58,22 @@ export default function WritePost() {
       type === "REVIEW" && isOpen && debouncedRegionQuery.trim().length >= 1,
   });
 
-  // REVIEW가 아니면 region 관련 상태 정리
-  useEffect(() => {
-    if (type !== "REVIEW") {
+  const maxImages = 5;
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedType   = e.target.value as CategoryType;
+    if (selectedType !== "REVIEW") {
       setRegionSlug("");
       setRegionQuery("");
       setRating(0);
       setIsOpen(false);
     }
-  }, [type]);
-
-  const maxImages = 5;
+    setType(selectedType);
+  };
 
   const handleAddFiles = (files: FileList | null) => {
     if (!files) return;
 
-    // 용량 검사
     for (let i = 0; i < files.length; i++) {
       if (files[i].size > MAX_SIZE_BYTES) {
         setErrorMessage([`이미지 하나당 최대 용량은 ${MAX_SIZE_MB}MB입니다.`]);
@@ -89,7 +87,6 @@ export default function WritePost() {
 
     if (incoming.length + images.length > maxImages) {
       setErrorMessage([`최대 ${maxImages}개의 이미지만 업로드 가능합니다.`]);
-      // 추가된 incoming preview는 해제
       incoming.forEach((f) => URL.revokeObjectURL(f.preview));
       return;
     }
@@ -105,19 +102,16 @@ export default function WritePost() {
     });
   };
 
-  // 언마운트 시 blob url 정리
   useEffect(() => {
     return () => {
       images.forEach((img) => URL.revokeObjectURL(img.preview));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const canSubmit = useMemo(() => {
     if (!title.trim()) return false;
     if (!content.trim()) return false;
     if (type === "REVIEW") {
-      // 리뷰면 지역 선택을 강제할지 정책 선택(여기선 강제)
       if (!regionSlug) return false;
       if (rating < 0 || rating > 5) return false;
     }
@@ -159,58 +153,52 @@ export default function WritePost() {
     },
   });
 
-  // 캡션 변경
-const handleChangeCaption = (index: number, caption: string) => {
-  setImages((prev) =>
-    prev.map((img, i) => {
-      if (i === index) {
-        // 기존 File 객체의 원본을 유지하면서 caption 속성만 덮어씌웁니다.
-        return Object.assign(img, { caption });
-      }
-      return img;
-    }),
-  );
-};
+  const handleChangeCaption = (index: number, caption: string) => {
+    setImages((prev) =>
+      prev.map((img, i) => {
+        if (i === index) {
+          return Object.assign(img, { caption });
+        }
+        return img;
+      }),
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const t = title.trim();
-  const c = content.trim();
+    const t = title.trim();
+    const c = content.trim();
 
-  if (!t || !c) {
-    setErrorMessage(["제목과 내용을 입력해주세요."]);
-    return;
-  }
+    if (!t || !c) {
+      setErrorMessage(["제목과 내용을 입력해주세요."]);
+      return;
+    }
 
-  if (type === "REVIEW" && !regionSlug) {
-    setErrorMessage(["리뷰는 지역을 선택해주세요."]);
-    return;
-  }
+    if (type === "REVIEW" && !regionSlug) {
+      setErrorMessage(["리뷰는 지역을 선택해주세요."]);
+      return;
+    }
 
-  setErrorMessage([]);
+    setErrorMessage([]);
 
-  const formData = new FormData();
-  formData.append("title", t);
-  formData.append("content", c);
-  formData.append("type", type);
+    const formData = new FormData();
+    formData.append("title", t);
+    formData.append("content", c);
+    formData.append("type", type);
 
-  if (type === "REVIEW") {
-    formData.append("regionSlug", regionSlug);
-    formData.append("rating", String(rating));
-  }
+    if (type === "REVIEW") {
+      formData.append("regionSlug", regionSlug);
+      formData.append("rating", String(rating));
+    }
 
-  // 2. captions (텍스트 배열)도 여기서 미리 append
-  images.forEach((file) => {
-    formData.append("captions", (file.caption ?? "").trim());
-  });
+    images.forEach((file) => {
+      formData.append("captions", (file.caption ?? "").trim());
+    });
+    images.forEach((file) => formData.append("image", file));
 
-  // ✅ 이미지 + 캡션을 "같은 순서"로 보냄 // 이미지는 제일 마지막에 
-  images.forEach((file) => formData.append("image", file));
-
-  
-  createPostMutation.mutate(formData);
-};
+    createPostMutation.mutate(formData);
+  };
 
   const isSubmitting = createPostMutation.isPending;
 
@@ -218,7 +206,6 @@ const handleChangeCaption = (index: number, caption: string) => {
     <Container className="py-10">
       <Card className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white">
         <CardContent className="space-y-6 p-6">
-          {/* Header */}
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-neutral-900">새 글 작성</h1>
             <p className="text-sm text-neutral-500">
@@ -227,31 +214,32 @@ const handleChangeCaption = (index: number, caption: string) => {
           </div>
 
           {errorMessage.length > 0 && (
-  <div
-    className="rounded-2xl border border-red-200 bg-red-50 p-4"
-    role="alert"
-    aria-live="polite"
-  >
-    <p className="text-sm font-semibold text-red-700">작성에 실패했어요</p>
-    <ul className="mt-2 list-disc space-y-1 pl-5">
-      {errorMessage.map((msg) => (
-        <li key={msg} className="text-sm text-red-700">
-          {msg}
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+            <div
+              className="rounded-2xl border border-red-200 bg-red-50 p-4"
+              role="alert"
+              aria-live="polite"
+            >
+              <p className="text-sm font-semibold text-red-700">
+                작성에 실패했어요
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {errorMessage.map((msg) => (
+                  <li key={msg} className="text-sm text-red-700">
+                    {msg}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* 게시판 */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-neutral-900">
                 게시판
               </label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as CategoryType)}
+                onChange={handleTypeChange}
                 className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
               >
                 <option value="FREE">일반 게시글</option>
@@ -265,7 +253,6 @@ const handleChangeCaption = (index: number, caption: string) => {
               </p>
             </div>
 
-            {/* 제목 */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-neutral-900">
                 제목
@@ -280,16 +267,14 @@ const handleChangeCaption = (index: number, caption: string) => {
               />
             </div>
 
-            {/* 이미지 업로드 (새 UI) */}
             <ImageUploader
-  images={images}
-  onAddFiles={handleAddFiles}
-  onRemove={removeImage}
-  onChangeCaption={handleChangeCaption}
-  max={maxImages}
-/>
+              images={images}
+              onAddFiles={handleAddFiles}
+              onRemove={removeImage}
+              onChangeCaption={handleChangeCaption}
+              max={maxImages}
+            />
 
-            {/* 내용 */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-neutral-900">
                 내용
@@ -304,13 +289,10 @@ const handleChangeCaption = (index: number, caption: string) => {
               <div className="flex justify-between text-xs text-neutral-500">
                 <span>{content.length}자</span>
               </div>
-             
             </div>
 
-            {/* REVIEW 전용 */}
             {type === "REVIEW" ? (
               <div className="space-y-5 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                {/* 지역 검색 */}
                 <div className="relative space-y-2">
                   <label className="block text-sm font-semibold text-neutral-900">
                     지역 검색
@@ -328,12 +310,9 @@ const handleChangeCaption = (index: number, caption: string) => {
                     className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
                     onFocus={() => setIsOpen(true)}
                     onBlur={() => {
-                      // 클릭 선택이 blur와 충돌할 수 있어 살짝 지연
                       setTimeout(() => setIsOpen(false), 150);
                     }}
                   />
-
-                  {/* 검색 결과 */}
                   {isOpen && debouncedRegionQuery.trim().length >= 1 ? (
                     <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg">
                       {isRegionLoading ? (
@@ -348,7 +327,6 @@ const handleChangeCaption = (index: number, caption: string) => {
                                 type="button"
                                 className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50"
                                 onMouseDown={(e) => {
-                                  // blur보다 먼저 선택되도록
                                   e.preventDefault();
                                   setRegionSlug(d.slug);
                                   setRegionQuery(d.name);
@@ -377,8 +355,6 @@ const handleChangeCaption = (index: number, caption: string) => {
                   </p>
                 </div>
 
-                {/* 평점 */}
-                {/* 평점 */}
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-neutral-900">
                     평점
@@ -393,8 +369,6 @@ const handleChangeCaption = (index: number, caption: string) => {
               </div>
             ) : null}
 
-
-            {/* Actions */}
             <div className="flex items-center justify-end gap-2">
               <Button
                 type="button"

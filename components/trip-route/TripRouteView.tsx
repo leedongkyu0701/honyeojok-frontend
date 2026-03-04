@@ -26,7 +26,7 @@ export default function TripRouteView({ region }: { region: string }) {
       <Container className="space-y-6">
         <SectionHeader
           title="추천 여행 루트"
-          description={`${region}에서 많이 저장되는 루트를 확인하세요.`}
+          description={`${region} 에서 많이 저장되는 루트를 확인하세요.`}
         />
 
         {isLoading ? (

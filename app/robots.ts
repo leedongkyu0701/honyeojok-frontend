@@ -6,7 +6,6 @@ export default function robots(): MetadataRoute.Robots {
   const isProduction = process.env.VERCEL_ENV === "production";
 
   if (!isProduction) {
-    // 가배포 / 개발 환경 → 전체 차단
     return {
       rules: {
         userAgent: "*",
@@ -15,7 +14,6 @@ export default function robots(): MetadataRoute.Robots {
     };
   }
 
-  // 실제 운영 환경
   return {
     rules: {
       userAgent: "*",

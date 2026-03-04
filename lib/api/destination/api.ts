@@ -64,6 +64,7 @@ export async function fetchDestinationDetail(
 ): Promise<DestinationDetailResponse> {
   const response = await fetchClient(`/destinations/${region}`, {
     skipAuth: true,
+    withCredentials: false,
   });
   await parseApiError(response);
   return response.json();
@@ -87,6 +88,7 @@ export async function searchDestinations(
     `/destinations/search?q=${encodeURIComponent(query)}`,
     {
       skipAuth: true,
+      withCredentials: false,
     },
   );
   await parseApiError(response);
