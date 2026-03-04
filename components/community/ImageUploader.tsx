@@ -76,7 +76,10 @@ export default function ImageUploader({
           accept="image/*"
           multiple
           className="hidden"
-          onChange={(e) => onAddFiles(e.target.files)}
+          onChange={(e) => {
+            onAddFiles(e.target.files);
+            e.currentTarget.value = "";
+          }}
         />
       </div>
 
@@ -101,7 +104,7 @@ export default function ImageUploader({
                   type="button"
                   onClick={() => onRemove(idx)}
                   className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white text-base hover:bg-black"
-                  aria-label="remove image"
+                  aria-label="사진 삭제"
                 >
                   ×
                 </button>

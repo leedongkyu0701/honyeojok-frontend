@@ -19,6 +19,7 @@ import ImageUploader, {
 import StarRating from "../common/StarRating";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
+import { se } from "date-fns/locale";
 const MAX_SIZE_MB = 6;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
@@ -43,6 +44,7 @@ export default function WritePost() {
   const [regionSlug, setRegionSlug] = useState("");
   const [regionQuery, setRegionQuery] = useState("");
   const [rating, setRating] = useState<number>(0);
+  const [skipRegion, setSkipRegion] = useState(false);
 
   const [images, setImages] = useState<FileWithPreview[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -56,18 +58,22 @@ export default function WritePost() {
     queryKey: ["search-destinations", debouncedRegionQuery],
     queryFn: () => searchDestinations(debouncedRegionQuery),
     enabled:
-      type === "REVIEW" && isOpen && debouncedRegionQuery.trim().length >= 1,
+      type === "REVIEW" &&
+      isOpen &&
+      debouncedRegionQuery.trim().length >= 1 &&
+      !skipRegion,
   });
 
   const maxImages = 5;
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedType   = e.target.value as CategoryType;
+    const selectedType = e.target.value as CategoryType;
     if (selectedType !== "REVIEW") {
       setRegionSlug("");
       setRegionQuery("");
       setRating(0);
       setIsOpen(false);
+      setSkipRegion(false);
     }
     setType(selectedType);
   };
@@ -109,13 +115,10 @@ export default function WritePost() {
 
   useEffect(() => {
     return () => {
-      imagesRef.current.forEach((img) =>{
-        try{
-           URL.revokeObjectURL(img.preview);
-        }
-        catch{
-
-        }
+      imagesRef.current.forEach((img) => {
+        try {
+          URL.revokeObjectURL(img.preview);
+        } catch {}
       });
     };
   }, []);
@@ -124,11 +127,11 @@ export default function WritePost() {
     if (!title.trim()) return false;
     if (!content.trim()) return false;
     if (type === "REVIEW") {
-      if (!regionSlug) return false;
+      if (!regionSlug && !skipRegion) return false;
       if (rating < 0 || rating > 5) return false;
     }
     return true;
-  }, [title, content, type, regionSlug, rating]);
+  }, [title, content, type, regionSlug, rating, skipRegion]);
 
   const createPostMutation = useMutation({
     mutationFn: (formData: FormData) => createPost(formData),
@@ -187,7 +190,7 @@ export default function WritePost() {
       return;
     }
 
-    if (type === "REVIEW" && !regionSlug) {
+    if (type === "REVIEW" && !regionSlug && !skipRegion) {
       setErrorMessage(["리뷰는 지역을 선택해주세요."]);
       return;
     }
@@ -199,7 +202,7 @@ export default function WritePost() {
     formData.append("content", c);
     formData.append("type", type);
 
-    if (type === "REVIEW") {
+    if (type === "REVIEW" && !skipRegion) {
       formData.append("regionSlug", regionSlug);
       formData.append("rating", String(rating));
     }
@@ -312,19 +315,46 @@ export default function WritePost() {
 
                   <input
                     type="text"
+                    disabled={skipRegion}
                     value={regionQuery}
                     onChange={(e) => {
+                      if (skipRegion) return;
                       setRegionQuery(e.target.value);
                       setRegionSlug("");
                       setIsOpen(true);
                     }}
                     placeholder="예) 묵호, 서울, 강릉..."
                     className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
-                    onFocus={() => setIsOpen(true)}
+                    onFocus={() => !skipRegion && setIsOpen(true)}
                     onBlur={() => {
                       setTimeout(() => setIsOpen(false), 150);
                     }}
                   />
+                  <div className="ml-2 flex items-center gap-2">
+                    <input
+                      id="skip-region"
+                      type="checkbox"
+                      checked={skipRegion}
+                      onChange={(e) => {
+                        const next = e.target.checked;
+                        setSkipRegion(next);
+
+                        if (next) {
+                          setRegionSlug("");
+                          setRegionQuery("");
+                          setIsOpen(false);
+                        }
+                      }}
+                      className="h-4 w-4 accent-neutral-900"
+                    />
+                    <label
+                      htmlFor="skip-region"
+                      className="text-sm text-neutral-700"
+                    >
+                      지역 선택 안 함
+                    </label>
+                  </div>
+
                   {isOpen && debouncedRegionQuery.trim().length >= 1 ? (
                     <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg">
                       {isRegionLoading ? (
@@ -363,7 +393,7 @@ export default function WritePost() {
                   <p className="text-xs text-neutral-500">
                     {regionSlug
                       ? `선택됨: ${regionSlug}`
-                      : "검색 결과에서 지역을 선택해주세요."}
+                      : "아직 지역이 없다면 제목에 지역을 포함후 지역 선택 안 함 체크박스를 클릭해주세요."}
                   </p>
                 </div>
 

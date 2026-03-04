@@ -13,7 +13,7 @@ export default function HeroSection() {
               혼자 어디론가 떠나고 싶을 때,
           </p>
 
-          <h1 className="mb-8 text-4xl  font-semibold leading-tight text-neutral-900 md:text-5xl">
+          <h1 className="mb-8 text-4xl tracking-[0.04em] font-semibold leading-tight text-neutral-900 md:text-5xl">
             혼여족
           </h1>
          
