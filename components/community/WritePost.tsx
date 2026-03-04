@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CategoryType } from "@/types/community";
 import { createPost } from "@/lib/api/community/api";
 import { useRouter } from "next/navigation";
@@ -50,6 +50,7 @@ export default function WritePost() {
   const [errorMessage, setErrorMessage] = useState<string[]>([]);
 
   const debouncedRegionQuery = useDebounce(regionQuery, 400);
+  const imagesRef = useRef<FileWithPreview[]>([]);
 
   const { data: regionSuggestions, isLoading: isRegionLoading } = useQuery({
     queryKey: ["search-destinations", debouncedRegionQuery],
@@ -103,8 +104,19 @@ export default function WritePost() {
   };
 
   useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
+  useEffect(() => {
     return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.preview));
+      imagesRef.current.forEach((img) =>{
+        try{
+           URL.revokeObjectURL(img.preview);
+        }
+        catch{
+
+        }
+      });
     };
   }, []);
 
