@@ -157,7 +157,7 @@ export default function SpotDetailPage({ id }: { id: string }) {
                   <span className="text-neutral-400">↗</span>
                 </a>
                 <p className="text-[11px] ml-2 leading-4 text-neutral-400">
-                  예: 가게(카카오맵) · 장소(VisitKorea 등)
+                  예: 가게(카카오맵,다이닝코드) · 장소(VisitKorea 등)
                 </p>
               </div>
             )}
