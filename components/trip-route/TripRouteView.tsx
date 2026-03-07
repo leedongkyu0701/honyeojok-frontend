@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchTripRoutesByRegion } from "@/lib/api/trip-route/api";
-import type { TripRouteCardEntity } from "@/types/trip-routes";
+import type { TripRouteCardResponse } from "@/types/trip-routes";
 
 import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
@@ -11,12 +11,12 @@ import EmptyState from "@/components/common/EmptyState";
 
 import RouteCard from "../trip-route/RouteCard";
 
-export default function RegionTripRoute({ region }: { region: string }) {
+export default function TripRouteView({ region }: { region: string }) {
   const {
     data: tripRoutes,
     isLoading,
     isError,
-  } = useQuery<TripRouteCardEntity[]>({
+  } = useQuery<TripRouteCardResponse[]>({
     queryKey: ["trip-routes", region],
     queryFn: () => fetchTripRoutesByRegion(region),
   });
@@ -26,7 +26,7 @@ export default function RegionTripRoute({ region }: { region: string }) {
       <Container className="space-y-6">
         <SectionHeader
           title="추천 여행 루트"
-          description={`${region}에서 많이 저장되는 루트를 확인하세요.`}
+          description={`${region} 에서 많이 저장되는 루트를 확인하세요.`}
         />
 
         {isLoading ? (

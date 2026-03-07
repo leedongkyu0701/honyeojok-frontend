@@ -1,29 +1,51 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+
 import Container from "@/components/common/Container";
 import SectionHeader from "@/components/common/SectionHeader";
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
-import type { SpotCardVM } from "@/types/spots";
+import type { SpotCardResponse } from "@/types/spots";
 import { fetchRecommendedSpots } from "@/lib/api/spot/api";
 import SpotCard from "@/components/spot/SpotCard";
 import Link from "next/link";
 import Button from "@/components/common/Button";
 import HorizontalRail from "@/components/common/HorizontalRail";
 
+function shuffle<T>(arr: T[], n: number) {
+  const copy = [...arr];
+
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy.slice(0, n);
+}
+
 export default function BestSpotSection() {
-  const { data: spots, isLoading, isError } = useQuery<SpotCardVM[]>({
+  const {
+    data: spots,
+    isLoading,
+    isError,
+  } = useQuery<SpotCardResponse[]>({
     queryKey: ["spots", "recommended"],
     queryFn: fetchRecommendedSpots,
   });
 
+  const pickedSpots = useMemo(() => {
+    if (!spots || spots.length === 0) return [];
+    return shuffle(spots, 10);
+  }, [spots]);
+
   return (
-    <section className="py-12">
+    <section className="py-12 ">
       <Container className="space-y-6">
         <SectionHeader
           title="추천 스팟"
-          description="혼자 가기 좋은 스팟을 모아봤어요."
+          description="혼자 가기 좋은 인기있는 장소를 모아봤어요."
           action={
             <Link href="/spots">
               <Button variant="ghost" size="sm">
@@ -34,23 +56,34 @@ export default function BestSpotSection() {
         />
 
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <HorizontalRail
+            itemClassName="w-[44%] sm:w-[48.5%] md:w-[32%] lg:w-[23.5%]"
+          >
             {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-48" />
+              <Skeleton key={index} className="h-48 w-full rounded-2xl" />
             ))}
-          </div>
+          </HorizontalRail>
         ) : null}
 
         {isError ? (
           <EmptyState
             title="스팟을 불러오지 못했어요."
-            description={"잠시 후 다시 시도해주세요."}
+            description="잠시 후 다시 시도해주세요."
           />
         ) : null}
 
-        {!isLoading && !isError && spots && spots.length > 0 ? (
-          <HorizontalRail itemClassName="w-[85%] sm:w-[48%] md:w-[40%] lg:w-[24%]">
-            {spots.map((spot) => (
+        {!isLoading && !isError && (!spots || spots.length === 0) ? (
+          <EmptyState
+            title="추천 스팟이 아직 없어요."
+            description="조금만 기다려주세요!"
+          />
+        ) : null}
+
+        {!isLoading && !isError && pickedSpots.length > 0 ? (
+          <HorizontalRail
+            itemClassName="w-[44%] sm:w-[48.5%] md:w-[32%] lg:w-[23.5%]"
+          >
+            {pickedSpots.map((spot) => (
               <SpotCard key={spot.id} spot={spot} />
             ))}
           </HorizontalRail>

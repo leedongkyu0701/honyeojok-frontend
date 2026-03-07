@@ -41,7 +41,6 @@ export default function SocialLoginCallback() {
     })();
   }, [router, setAccessToken]);
 
-  // UX: 로딩 표시(없어도 되지만 화면이 비면 당황함)
   return (
     <div className="min-h-[calc(100vh-60px)] grid place-items-center">
       <div className="text-sm text-neutral-600">로그인 처리 중...</div>

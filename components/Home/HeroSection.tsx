@@ -9,13 +9,14 @@ export default function HeroSection() {
     <section className="relative overflow-hidden bg-white py-20">
       <Container className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-neutral-500">
-            혼자 떠나는 여행의 시작
+          <p className=" pl-[0.3em] text-sm uppercase tracking-[0.08em] text-neutral-500">
+              혼자 어디론가 떠나고 싶을 때,
           </p>
 
-          <h1 className="mb-4 text-4xl font-semibold leading-tight text-neutral-900 md:text-5xl">
-            HONYEO
+          <h1 className="mb-8 text-4xl tracking-[0.04em] font-semibold leading-tight text-neutral-900 md:text-5xl">
+            혼여족
           </h1>
+         
 
           <div className="flex flex-wrap gap-3">
             <Link href="/destinations/random">

@@ -3,7 +3,9 @@ import { parseApiError } from "./parseApiError";
 import { ApiError } from "./apiError";
 import { ErrorCode } from "@/types/error-code";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001/api";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001";
+
 let refreshPromise: Promise<string> | null = null;
 
 async function runRefresh(): Promise<string> {
@@ -34,37 +36,46 @@ async function runRefresh(): Promise<string> {
 export type FetchClientOptions = RequestInit & {
   skipAuth?: boolean;
   withCredentials?: boolean;
-}
+};
 
 export async function fetchClient(
   endpoint: string,
-  options: FetchClientOptions = {withCredentials: true},
+  options: FetchClientOptions = { withCredentials: true },
 ): Promise<Response> {
   const { accessToken, logout, setAccessToken } = useAuthStore.getState();
   const withCredentials = options.withCredentials ?? true;
 
-  const doFetch = (token?: string | null) =>
-    fetch(`${API_BASE_URL}${endpoint}`, {
+  const isFormData = options.body instanceof FormData;
+
+  const doFetch = (token?: string | null) => {
+    const headers = new Headers(options.headers || {});
+    if (isFormData) {
+      headers.delete("Content-Type");
+      headers.delete("content-type");
+    }
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+
+    return fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
-      headers: {
-        ...(options.headers || {}),
-        ...(token && {
-          Authorization: `Bearer ${token}`,
-        }),
-      },
+      headers,
       credentials: withCredentials ? "include" : "omit",
     });
-
+  };
 
   const res = await doFetch(options.skipAuth ? undefined : accessToken);
-  
-  if (res.status !== 401 || options.skipAuth) return res;
+
+  if (res.status !== 401 || options.skipAuth) return res; // 인증 상태 제외는 바로 반환
 
   let shouldRefresh = true;
   try {
     const body = await res.clone().json();
     const code = body?.code;
-    if (code === ErrorCode.AUTH_UNAUTHORIZED || code === ErrorCode.AUTH_FORBIDDEN) {
+    if (
+      code === ErrorCode.AUTH_UNAUTHORIZED ||
+      code === ErrorCode.AUTH_FORBIDDEN
+    ) {
       shouldRefresh = false;
     }
   } catch {
@@ -76,12 +87,11 @@ export async function fetchClient(
     return res;
   }
 
-    try {
+  try {
     const newToken = await runRefresh();
     setAccessToken(newToken);
     return await doFetch(newToken);
   } catch (e) {
-    // refresh 실패면 로그아웃
     logout();
     throw e;
   }

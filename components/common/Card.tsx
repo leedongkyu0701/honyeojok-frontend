@@ -1,13 +1,20 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
+type CardProps = {
+  className?: string;
+  children: ReactNode;
+};
+
+type CardContentProps = {
+  className?: string;
+  children: ReactNode;
+};
+
 export function Card({
   className,
   children,
-}: {
-  className?: string;
-  children: ReactNode;
-}) {
+}: CardProps) {
   return (
     <div
       className={cn(
@@ -33,9 +40,6 @@ export function CardHeader({
 export function CardContent({
   className,
   children,
-}: {
-  className?: string;
-  children: ReactNode;
-}) {
+}: CardContentProps) {
   return <div className={cn("px-5 pb-5", className)}>{children}</div>;
 }

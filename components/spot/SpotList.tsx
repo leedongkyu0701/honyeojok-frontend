@@ -1,74 +1,93 @@
 "use client";
-import type { SpotCardVM } from "@/types/spots";
-import SpotCard from "./SpotCard";
+
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+
+import type { SpotCardResponse, SpotCategory } from "@/types/spots";
 import { fetchSpotsByRegion } from "@/lib/api/spot/api";
+
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
-import { useEffect } from "react";
+import SpotCard from "./SpotCard";
+import { OverlayLoader } from "../common/OverlayLoader";
+import { keepPreviousData } from "@tanstack/react-query";
 
 export default function SpotList({
-  tag,
+  region,
+  category,
   page,
+  take = 8,
   onTotalPagesChange,
-  region
 }: {
-  tag: string | null;
+  region: string;
+  category: SpotCategory | null;
   page: number;
+  take?: number;
   onTotalPagesChange?: (total: number) => void;
-    region: string;
 }) {
+  const {
+    data: results,
+    isLoading,
+    isError,
+    isFetching,
+    isPlaceholderData,
+  } = useQuery({
+    queryKey: ["spots", { region, category, page, take }],
+    queryFn: () =>
+      fetchSpotsByRegion(region, {
+        category,
+        page,
+        take,
+      }),
+    placeholderData: keepPreviousData,
+  });
 
-    const {
-      data: results,
-      isLoading,
-      isError,
-    } = useQuery<{
-      data: SpotCardVM[];
-      totalPages: number;   
-    }>({
-      queryKey: ["spots", { tag, page, region }],
-      queryFn: () => fetchSpotsByRegion(tag, page, region),
-    });
+  useEffect(() => {
+       if (!isPlaceholderData && typeof results?.totalPages === "number") {
+    onTotalPagesChange?.(Math.max(1, results.totalPages));
+  }
+  }, [onTotalPagesChange, results?.totalPages, isPlaceholderData]);
 
-    useEffect(() => {
-        onTotalPagesChange?.(results?.totalPages ?? 1);
-    }, [onTotalPagesChange, results?.totalPages]);
-
-    if (isLoading) {
-      return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} className="h-48" />
-          ))}
-        </div>
-      );
-    }
-
-    if (isError) {
-      return (
-        <EmptyState
-          title="스팟을 불러오지 못했어요."
-          description="잠시 후 다시 시도해주세요."
-        />
-      );
-    }
-
-    if (!(results?.data.length ?? 0)) {
-      return (
-        <EmptyState
-          title="스팟이 없어요."
-          description="다른 태그를 선택해보세요."
-        />
-      );
-    }
-
+  if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {results?.data.map((spot) => (
-          <SpotCard key={spot.id} spot={spot} />
+      <div className="rounded-2xl border border-neutral-200 bg-white">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="border-b border-neutral-100 p-4 last:border-b-0">
+            <Skeleton className="h-20" />
+          </div>
         ))}
       </div>
     );
+  }
 
+  if (isError) {
+    return (
+      <EmptyState
+        title="스팟을 불러오지 못했어요."
+        description="잠시 후 다시 시도해주세요."
+      />
+    );
+  }
+
+  if (!(results?.data.length ?? 0)) {
+    return (
+      <EmptyState
+        title="스팟이 없어요."
+        description="다른 카테고리를 선택해보세요."
+      />
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white">
+        <OverlayLoader show={isFetching && isPlaceholderData} /> 
+      <ul className="divide-y divide-neutral-100">
+        {results!.data.map((spot: SpotCardResponse) => (
+          <li key={spot.id} className="p-4">
+            <SpotCard spot={spot} variant="list" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }

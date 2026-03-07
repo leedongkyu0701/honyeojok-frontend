@@ -1,55 +1,69 @@
-// types/trip-routes.ts
+import { TagResponse } from "./tag";
 
-export type TripRouteTagEntity = {
+export type TripRouteCardResponse = {
+  id: number;
   slug: string;
-  label: string;
+
+  regionSlug: string;
+
+  title: string;
+  summary: string;
+  days: number;
+
+  bookmarkCount: number;
 };
 
-export type TripRouteItemType = "spot" | "food" | "cafe" | "stay" | "activity";
-
-export type TripRouteItemEntity = {
+export type TripRouteItemResponse = {
   id: number;
-  type: TripRouteItemType;
+
   order: number;
   recommendedLevel: number;
 
   title: string;
-  description?: string;
-  imageUrl?: string;
+  description: string;
 
-  lat?: number;
-  lng?: number;
+  imageUrl: string | null;
+  imageCredit: string | null;
 
-  address?: string;
-  startTime?: string; // "10:30"
-  endTime?: string;
+  lat: number | null;
+  lng: number | null;
 
-  externalUrl?: string;
+  address: string | null;
+
+  startTime: string | null;
+  endTime: string | null;
+
+  externalUrl: string | null;
+
+  // spot 연결된 경우에만 내려줌
+  spot?: {
+    id: number;
+    slug: string;
+  };
 };
 
-export type TripRouteDayEntity = {
+export type TripRouteDayResponse = {
   id: number;
-  dayNumber: number; // 1,2,3...
-  title?: string;
-  note?: string;
-  items: TripRouteItemEntity[];
+  dayNumber: number;
+  title: string;
+  note: string;
+
+  items: TripRouteItemResponse[];
 };
 
-// ✅ 카드(리스트)에서 내려오는 형태 (TripRoutesCardResponse)
-export type TripRouteCardEntity = {
+export type TripRouteDetailResponse = {
   id: number;
   slug: string;
-  region: string;
+
   title: string;
   summary: string;
+  honeyoTip: string | null;
   days: number;
+  honyeoCost: number;
+
   bookmarkCount: number;
-};
-
-// ✅ 디테일에서 내려오는 형태 (TripRouteDetailResponse)
-export type TripRouteDetailEntity = TripRouteCardEntity & {
-  tags: TripRouteTagEntity[];
-  daysPlan: TripRouteDayEntity[];
   bookmarkedByMe: boolean;
-};
 
+  tags: TagResponse[];
+  daysPlan: TripRouteDayResponse[];
+};

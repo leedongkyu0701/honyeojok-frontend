@@ -3,37 +3,36 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { CommentEntity } from "@/types/post";
-import { fetchComments, createComment, deleteComment } from "@/lib/api/community/api";
-
-import Button from "@/components/common/Button";
+import type { CommentResponse } from "@/types/community";
+import {
+  fetchComments,
+  createComment,
+  deleteComment,
+} from "@/lib/api/community/api";
 import EmptyState from "@/components/common/EmptyState";
 import Skeleton from "@/components/common/Skeleton";
 import { Card, CardContent } from "@/components/common/Card";
 import CommentItem from "@/components/community/CommentItem";
 import CommentForm from "@/components/community/CommentForm";
-
-function formatKoreanDate(iso: string) {
-  return new Date(iso).toLocaleDateString();
-}
+import { timeAgoOrDate } from "@/lib/timeAgo";
 
 export default function CommentsSection({ postId }: { postId: number }) {
   const qc = useQueryClient();
 
-  const [replyTo, setReplyTo] = useState<number | null>(null); // 답글 다는 대상 댓글 ID
-  const [commentValue, setCommentValue] = useState(""); // 최상위 댓글 입력값 (답글 아닐시)
-  const [replyValue, setReplyValue] = useState(""); // 답글 입력값
+  const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [commentValue, setCommentValue] = useState("");
+  const [replyValue, setReplyValue] = useState("");
+  const replyFormRef = useRef<HTMLDivElement | null>(null);
 
-  const replyFormRef = useRef<HTMLDivElement | null>(null); // 답글 폼 스크롤용
-
-  const commentsQuery = useQuery<CommentEntity[]>({
+  const commentsQuery = useQuery<CommentResponse[]>({
     queryKey: ["comments", postId],
     queryFn: () => fetchComments(postId),
+    staleTime: 10_000,
   });
 
   const createMutation = useMutation({
     mutationFn: (payload: { content: string; parentId: number | null }) =>
-      createComment(postId, payload.content, payload.parentId),
+      createComment(postId, payload),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["comments", postId] });
       setCommentValue("");
@@ -49,9 +48,10 @@ export default function CommentsSection({ postId }: { postId: number }) {
     },
   });
 
-  const comments = useMemo(() => {
-    return commentsQuery.data || [];
-  }, [commentsQuery.data]);
+  const comments = useMemo(
+    () => commentsQuery.data ?? [],
+    [commentsQuery.data],
+  );
 
   const totalCount = useMemo(() => {
     let count = 0;
@@ -66,7 +66,10 @@ export default function CommentsSection({ postId }: { postId: number }) {
     setReplyTo(parentId);
     setReplyValue("");
     requestAnimationFrame(() => {
-      replyFormRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      replyFormRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     });
   };
 
@@ -101,30 +104,21 @@ export default function CommentsSection({ postId }: { postId: number }) {
 
   if (commentsQuery.isError) {
     return (
-      <EmptyState title="댓글을 불러오지 못했어요." description="잠시 후 다시 시도해주세요." />
+      <EmptyState
+        title="댓글을 불러오지 못했어요."
+        description="잠시 후 다시 시도해주세요."
+      />
     );
   }
 
   return (
     <div className="space-y-4">
-      {/* 상단 요약 + 최상위 댓글 입력 */}
       <Card className="rounded-2xl border border-neutral-200">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-neutral-900">
               댓글 <span className="text-neutral-500">({totalCount})</span>
             </p>
-
-            {replyTo !== null ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setReplyTo(null)}
-                className="px-2"
-              >
-                답글 취소
-              </Button>
-            ) : null}
           </div>
 
           <CommentForm
@@ -135,13 +129,14 @@ export default function CommentsSection({ postId }: { postId: number }) {
             submitLabel="등록"
             isSubmitting={createMutation.isPending}
           />
-          
         </CardContent>
       </Card>
 
-      {/* 댓글 목록 */}
       {comments.length === 0 ? (
-        <EmptyState title="아직 댓글이 없어요." description="첫 댓글을 남겨보세요." />
+        <EmptyState
+          title="아직 댓글이 없어요."
+          description="첫 댓글을 남겨보세요."
+        />
       ) : (
         <div className="space-y-3">
           {comments.map((c) => (
@@ -149,20 +144,21 @@ export default function CommentsSection({ postId }: { postId: number }) {
               <CommentItem
                 author={c.user.nickName}
                 content={c.content}
-                date={formatKoreanDate(c.createdAt)}
+                date={timeAgoOrDate(c.createdAt)}
                 isDeleted={c.isDeleted}
                 onReply={c.isDeleted ? undefined : () => openReply(c.id)}
                 onDelete={c.isDeleted ? undefined : () => confirmDelete(c.id)}
               />
 
-              {/* 답글 폼: 부모 댓글 바로 아래 */}
-              {replyTo === c.id ? (
+          
+              {replyTo === c.id ? ( // 답글 클릭 시 노출 폼
                 <div
                   ref={replyFormRef}
                   className="ml-8 rounded-2xl border border-neutral-200 bg-white p-3"
                 >
                   <p className="mb-2 text-xs text-neutral-600">
-                    <span className="font-semibold">{c.user.nickName}</span> 님에게 답글
+                    <span className="font-semibold">{c.user.nickName}</span>{" "}
+                    님에게 답글
                   </p>
 
                   <CommentForm
@@ -178,7 +174,6 @@ export default function CommentsSection({ postId }: { postId: number }) {
                 </div>
               ) : null}
 
-              {/* children */}
               {c.children?.length ? (
                 <div className="ml-8 space-y-2 border-l border-neutral-200 pl-4">
                   {c.children.map((child) => (
@@ -186,11 +181,13 @@ export default function CommentsSection({ postId }: { postId: number }) {
                       key={child.id}
                       author={child.user.nickName}
                       content={child.content}
-                      date={formatKoreanDate(child.createdAt)}
+                      date={timeAgoOrDate(child.createdAt)}
                       isDeleted={child.isDeleted}
-                      isChild
-                      onDelete={child.isDeleted ? undefined : () => confirmDelete(child.id)}
-                      // 대댓글 1단계 정책: 답글 버튼 없음
+                      onDelete={
+                        child.isDeleted
+                          ? undefined
+                          : () => confirmDelete(child.id)
+                      }
                     />
                   ))}
                 </div>

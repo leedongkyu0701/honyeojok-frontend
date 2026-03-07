@@ -1,6 +1,6 @@
 export type Provider = "apple" | "kakao" | "google" | "naver";
 
-export type ProfileVM = {
+export type ProfileResponse = {
   id: number;
   email: string | null;
   provider: Provider;

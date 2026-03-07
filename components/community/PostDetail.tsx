@@ -1,13 +1,15 @@
 "use client";
 
-import { fetchPostDetail, deletePost } from "@/lib/api/community/api";
+import {
+  fetchPostDetail,
+  deletePost,
+  incrementPostViewCount,
+} from "@/lib/api/community/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { PostDetailVM } from "@/types/post";
+import type { PostDetailResponse } from "@/types/community";
 import { useRouter } from "next/navigation";
-import PostImageCarousel from "./PostImageCarousel";
 
 import { Card, CardContent } from "@/components/common/Card";
-import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import EmptyState from "@/components/common/EmptyState";
 import Skeleton from "@/components/common/Skeleton";
@@ -18,16 +20,48 @@ import CommentsSection from "./CommentsSection";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { timeAgoOrDate } from "@/lib/timeAgo";
+import { useEffect } from "react";
+import PostImageBlock from "./PostImageBlock";
+import { Eye, MapPin } from "lucide-react";
+import { useAuthStore } from "@/stores/auth.store";
+
+function typeLabel(t: PostDetailResponse["type"]) {
+  if (t === "REVIEW") return "리뷰";
+  if (t === "QUESTION") return "질문";
+  return "자유";
+}
+
+function typeBadgeClass(t: PostDetailResponse["type"]) {
+  if (t === "REVIEW")
+    return "bg-emerald-50 text-emerald-700 border-emerald-100";
+  if (t === "QUESTION") return "bg-indigo-50 text-indigo-700 border-indigo-100";
+  return "bg-neutral-50 text-neutral-700 border-neutral-200";
+}
 
 export default function PostDetail({ id }: { id: number }) {
+  const authInitialized = useAuthStore((s) => s.authInitialized);
   const {
     data: postDetail,
     isLoading,
     isError,
-  } = useQuery<PostDetailVM>({
+  } = useQuery<PostDetailResponse>({
     queryKey: ["post", id],
     queryFn: () => fetchPostDetail(id),
+    enabled: authInitialized,
   });
+
+  useEffect(() => {
+    if (!id) return;
+
+    const key = `viewed_post_session_${id}`;
+    if (sessionStorage.getItem(key) === "1") return;
+
+    sessionStorage.setItem(key, "1");
+
+    incrementPostViewCount(id).catch(() => {});
+  }, [id]);
 
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -44,7 +78,7 @@ export default function PostDetail({ id }: { id: number }) {
     onError: (error) => {
       if (error instanceof ApiError) {
         if (error.code === ErrorCode.AUTH_FORBIDDEN) {
-          toast.error("삭제 권한이 없어요.");
+          toast.error("본인의 게시글만 삭제할 수 있어요.");
           return;
         }
         if (error.code === ErrorCode.RESOURCE_NOT_FOUND) {
@@ -57,13 +91,13 @@ export default function PostDetail({ id }: { id: number }) {
     },
   });
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     const ok = confirm("정말 삭제할까요?");
     if (!ok) return;
     deleteMutation.mutate();
   };
 
-  if (isLoading) {
+  if (isLoading || !authInitialized) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-24" />
@@ -91,36 +125,68 @@ export default function PostDetail({ id }: { id: number }) {
     );
   }
 
-  const created = new Date(postDetail.createdAt).toLocaleDateString();
+  const nickName = postDetail.nickName ?? "익명";
+  const createdText = timeAgoOrDate(postDetail.createdAt);
 
   return (
     <div className="space-y-6">
-      {/* Post */}
       <Card className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
         <CardContent className="space-y-5 p-5">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 space-y-2">
-              <h1 className="text-xl font-bold leading-snug text-neutral-900 md:text-2xl">
-                {postDetail.title}
-              </h1>
+          <div className="space-y-3">
+            <div className="flex flex-nowrap items-center gap-2 text-xs">
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full border px-2 py-0.5 font-medium",
+                  typeBadgeClass(postDetail.type),
+                )}
+              >
+                {typeLabel(postDetail.type)}
+              </span>
 
-              <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500">
-                <Badge>{postDetail.region ?? "지역 미정"}</Badge>
-                <span className="text-neutral-300">·</span>
-                <span>{created}</span>
-                <span className="text-neutral-300">·</span>
-                <span className="truncate">작성자 {postDetail.nickName}</span>
+              <span className="text-neutral-400">·</span>
+              <span className="text-neutral-600">{createdText}</span>
+              <span className="text-neutral-400">·</span>
+              <span className="inline-flex items-center gap-1 text-neutral-500">
+                <Eye className="h-3 w-3" aria-hidden />
+                {postDetail.viewCount}
+              </span>
+              {postDetail.regionName && (
+                <div className="inline-flex items-center gap-1 text-xs text-neutral-500">
+                  <span className="text-neutral-400">·</span>
+                  <MapPin
+                    className="h-3.5 w-3.5 text-neutral-400"
+                    aria-hidden
+                  />
+                  <span>{postDetail.regionName}</span>
+                </div>
+              )}
+
+              <div className="ml-auto hidden items-center gap-1 md:flex">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDelete}
+                  className="px-2 py-1 text-xs text-neutral-500 hover:text-red-600"
+                  disabled={deleteMutation.isPending}
+                >
+                  Delete
+                </Button>
+
+                <LikeButton
+                  postId={postDetail.id}
+                  initialLikeCount={postDetail.likeCount}
+                  likedByMe={postDetail.likedByMe}
+                />
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex justify-end gap-1 md:hidden">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleDelete}
-                className="px-3 text-neutral-500 hover:text-red-600"
+                className="px-2 py-1 text-xs text-neutral-500 hover:text-red-600"
+                disabled={deleteMutation.isPending}
               >
                 Delete
               </Button>
@@ -131,14 +197,23 @@ export default function PostDetail({ id }: { id: number }) {
                 likedByMe={postDetail.likedByMe}
               />
             </div>
+
+            <div className="space-y-1">
+              <h1 className="text-xl font-bold leading-snug text-neutral-900 md:text-2xl">
+                {postDetail.title}
+              </h1>
+
+              <div className="flex items-center gap-2 text-sm text-neutral-500">
+                <span>by.</span>
+                <span className="font-medium text-neutral-700">{nickName}</span>
+              </div>
+            </div>
           </div>
 
-          {/* Images */}
-          {postDetail.imageUrls?.length ? (
-            <PostImageCarousel imageUrls={postDetail.imageUrls} />
+          {postDetail.images?.length ? (
+            <PostImageBlock images={postDetail.images} />
           ) : null}
 
-          {/* Content */}
           <article className="prose prose-neutral max-w-none">
             <p className="whitespace-pre-wrap text-sm leading-7 text-neutral-700">
               {postDetail.content}
@@ -147,12 +222,9 @@ export default function PostDetail({ id }: { id: number }) {
         </CardContent>
       </Card>
 
-      {/* Comments */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900">댓글</h2>
-          <p className="text-xs text-neutral-500">건전한 대화를 부탁해요</p>
-        </div>
+        <h2 className="text-lg font-semibold text-neutral-900">댓글</h2>
+
         <CommentsSection postId={postDetail.id} />
       </section>
     </div>

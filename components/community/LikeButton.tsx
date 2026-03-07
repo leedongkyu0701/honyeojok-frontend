@@ -2,6 +2,7 @@
 import Button from "@/components/common/Button";
 import { likePost } from "@/lib/api/community/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Heart } from "lucide-react";
 
 type PostCache = {
   likedByMe: boolean;
@@ -25,7 +26,6 @@ export default function LikeButton({
   const mutation = useMutation({
     mutationFn: () => likePost(postId),
     onMutate: async () => {
-      // 낙관적 업데이트 (상세 캐시만 바로 바꾸고 안될경우 롤백)
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
 
       const previousPost = queryClient.getQueryData<PostCache>([
@@ -65,10 +65,6 @@ export default function LikeButton({
         };
       });
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["post", postId] });
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
   });
 
   return (
@@ -78,8 +74,11 @@ export default function LikeButton({
       variant="outline"
       size="sm"
     >
-      <span aria-hidden>{likedByMeCached ? "❤️" : "🤍"}</span>
-      {mutation.isPending ? "처리 중..." : `좋아요 (${likeCountCached})`}
+      <Heart
+        className={`h-4 w-4 ${likedByMeCached ? "fill-red-500 text-red-500" : "text-neutral-500"}`}
+        aria-hidden
+      />
+      {mutation.isPending ? "처리 중..." : `좋아요 ${likeCountCached}`}
     </Button>
   );
 }

@@ -3,15 +3,22 @@ import Container from "@/components/common/Container";
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-neutral-200 bg-white">
+    <footer className="mt-10 border-t border-neutral-200 bg-white">
       <Container className="py-10">
-        {/* Top */}
-        <div className="space-y-2 text-sm text-neutral-500">
-          <p className="text-base font-semibold text-neutral-900">HonYeo</p>
-          <p>혼자 떠나는 여행을 더 편하게.</p>
+        <div className=" text-sm text-neutral-500">
+          <p className=" text-base font-semibold text-neutral-900">HonYeoJok</p>
+          <p className="mb-2">혼자 떠나는 여행을 위한 정보 커뮤니티.</p>
+          <p>
+            문의:{" "}
+            <a
+              href="mailto:honyeo259@gmail.com"
+              className="underline hover:text-neutral-900"
+            >
+              honyeo259@gmail.com
+            </a>
+          </p>
         </div>
 
-        {/* Bottom */}
         <div className="mt-6 flex flex-col gap-3 border-t border-neutral-200 pt-6 text-sm text-neutral-600 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-x-4 gap-y-2">
             <Link href="/auth/terms" className="hover:text-neutral-900">
@@ -23,7 +30,7 @@ export default function Footer() {
           </div>
 
           <p className="text-xs text-neutral-400">
-            © {new Date().getFullYear()} HonYeo. All rights reserved.
+            © {new Date().getFullYear()} HonYeoJok. All rights reserved.
           </p>
         </div>
       </Container>

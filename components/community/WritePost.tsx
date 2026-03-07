@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { CategoryType } from "@/types/post";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CategoryType } from "@/types/community";
 import { createPost } from "@/lib/api/community/api";
 import { useRouter } from "next/navigation";
 
@@ -19,7 +19,8 @@ import ImageUploader, {
 import StarRating from "../common/StarRating";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
-const MAX_SIZE_MB = 5;
+import { se } from "date-fns/locale";
+const MAX_SIZE_MB = 6;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -40,42 +41,46 @@ export default function WritePost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  // REVIEW 전용
   const [regionSlug, setRegionSlug] = useState("");
   const [regionQuery, setRegionQuery] = useState("");
   const [rating, setRating] = useState<number>(0);
+  const [skipRegion, setSkipRegion] = useState(false);
 
-  // 이미지
   const [images, setImages] = useState<FileWithPreview[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState<string[]>([]);
 
   const debouncedRegionQuery = useDebounce(regionQuery, 400);
+  const imagesRef = useRef<FileWithPreview[]>([]);
 
   const { data: regionSuggestions, isLoading: isRegionLoading } = useQuery({
     queryKey: ["search-destinations", debouncedRegionQuery],
     queryFn: () => searchDestinations(debouncedRegionQuery),
     enabled:
-      type === "REVIEW" && isOpen && debouncedRegionQuery.trim().length >= 1,
+      type === "REVIEW" &&
+      isOpen &&
+      debouncedRegionQuery.trim().length >= 1 &&
+      !skipRegion,
   });
 
-  // REVIEW가 아니면 region 관련 상태 정리
-  useEffect(() => {
-    if (type !== "REVIEW") {
+  const maxImages = 5;
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedType = e.target.value as CategoryType;
+    if (selectedType !== "REVIEW") {
       setRegionSlug("");
       setRegionQuery("");
       setRating(0);
       setIsOpen(false);
+      setSkipRegion(false);
     }
-  }, [type]);
-
-  const maxImages = 5;
+    setType(selectedType);
+  };
 
   const handleAddFiles = (files: FileList | null) => {
     if (!files) return;
 
-    // 용량 검사
     for (let i = 0; i < files.length; i++) {
       if (files[i].size > MAX_SIZE_BYTES) {
         setErrorMessage([`이미지 하나당 최대 용량은 ${MAX_SIZE_MB}MB입니다.`]);
@@ -89,7 +94,6 @@ export default function WritePost() {
 
     if (incoming.length + images.length > maxImages) {
       setErrorMessage([`최대 ${maxImages}개의 이미지만 업로드 가능합니다.`]);
-      // 추가된 incoming preview는 해제
       incoming.forEach((f) => URL.revokeObjectURL(f.preview));
       return;
     }
@@ -105,24 +109,29 @@ export default function WritePost() {
     });
   };
 
-  // 언마운트 시 blob url 정리
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
   useEffect(() => {
     return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.preview));
+      imagesRef.current.forEach((img) => {
+        try {
+          URL.revokeObjectURL(img.preview);
+        } catch {}
+      });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const canSubmit = useMemo(() => {
     if (!title.trim()) return false;
     if (!content.trim()) return false;
     if (type === "REVIEW") {
-      // 리뷰면 지역 선택을 강제할지 정책 선택(여기선 강제)
-      if (!regionSlug) return false;
+      if (!regionSlug && !skipRegion) return false;
       if (rating < 0 || rating > 5) return false;
     }
     return true;
-  }, [title, content, type, regionSlug, rating]);
+  }, [title, content, type, regionSlug, rating, skipRegion]);
 
   const createPostMutation = useMutation({
     mutationFn: (formData: FormData) => createPost(formData),
@@ -159,6 +168,17 @@ export default function WritePost() {
     },
   });
 
+  const handleChangeCaption = (index: number, caption: string) => {
+    setImages((prev) =>
+      prev.map((img, i) => {
+        if (i === index) {
+          return Object.assign(img, { caption });
+        }
+        return img;
+      }),
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -170,7 +190,7 @@ export default function WritePost() {
       return;
     }
 
-    if (type === "REVIEW" && !regionSlug) {
+    if (type === "REVIEW" && !regionSlug && !skipRegion) {
       setErrorMessage(["리뷰는 지역을 선택해주세요."]);
       return;
     }
@@ -182,12 +202,16 @@ export default function WritePost() {
     formData.append("content", c);
     formData.append("type", type);
 
-    if (type === "REVIEW") {
+    if (type === "REVIEW" && !skipRegion) {
       formData.append("regionSlug", regionSlug);
       formData.append("rating", String(rating));
     }
 
+    images.forEach((file) => {
+      formData.append("captions", (file.caption ?? "").trim());
+    });
     images.forEach((file) => formData.append("image", file));
+
     createPostMutation.mutate(formData);
   };
 
@@ -197,7 +221,6 @@ export default function WritePost() {
     <Container className="py-10">
       <Card className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white">
         <CardContent className="space-y-6 p-6">
-          {/* Header */}
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-neutral-900">새 글 작성</h1>
             <p className="text-sm text-neutral-500">
@@ -206,31 +229,32 @@ export default function WritePost() {
           </div>
 
           {errorMessage.length > 0 && (
-  <div
-    className="rounded-2xl border border-red-200 bg-red-50 p-4"
-    role="alert"
-    aria-live="polite"
-  >
-    <p className="text-sm font-semibold text-red-700">작성에 실패했어요</p>
-    <ul className="mt-2 list-disc space-y-1 pl-5">
-      {errorMessage.map((msg) => (
-        <li key={msg} className="text-sm text-red-700">
-          {msg}
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
+            <div
+              className="rounded-2xl border border-red-200 bg-red-50 p-4"
+              role="alert"
+              aria-live="polite"
+            >
+              <p className="text-sm font-semibold text-red-700">
+                작성에 실패했어요
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {errorMessage.map((msg) => (
+                  <li key={msg} className="text-sm text-red-700">
+                    {msg}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* 게시판 */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-neutral-900">
                 게시판
               </label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as CategoryType)}
+                onChange={handleTypeChange}
                 className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
               >
                 <option value="FREE">일반 게시글</option>
@@ -244,7 +268,6 @@ export default function WritePost() {
               </p>
             </div>
 
-            {/* 제목 */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-neutral-900">
                 제목
@@ -259,15 +282,14 @@ export default function WritePost() {
               />
             </div>
 
-            {/* 이미지 업로드 (새 UI) */}
             <ImageUploader
               images={images}
               onAddFiles={handleAddFiles}
               onRemove={removeImage}
+              onChangeCaption={handleChangeCaption}
               max={maxImages}
             />
 
-            {/* 내용 */}
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-neutral-900">
                 내용
@@ -282,13 +304,10 @@ export default function WritePost() {
               <div className="flex justify-between text-xs text-neutral-500">
                 <span>{content.length}자</span>
               </div>
-             
             </div>
 
-            {/* REVIEW 전용 */}
             {type === "REVIEW" ? (
               <div className="space-y-5 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                {/* 지역 검색 */}
                 <div className="relative space-y-2">
                   <label className="block text-sm font-semibold text-neutral-900">
                     지역 검색
@@ -296,22 +315,46 @@ export default function WritePost() {
 
                   <input
                     type="text"
+                    disabled={skipRegion}
                     value={regionQuery}
                     onChange={(e) => {
+                      if (skipRegion) return;
                       setRegionQuery(e.target.value);
                       setRegionSlug("");
                       setIsOpen(true);
                     }}
                     placeholder="예) 묵호, 서울, 강릉..."
                     className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
-                    onFocus={() => setIsOpen(true)}
+                    onFocus={() => !skipRegion && setIsOpen(true)}
                     onBlur={() => {
-                      // 클릭 선택이 blur와 충돌할 수 있어 살짝 지연
                       setTimeout(() => setIsOpen(false), 150);
                     }}
                   />
+                  <div className="ml-2 flex items-center gap-2">
+                    <input
+                      id="skip-region"
+                      type="checkbox"
+                      checked={skipRegion}
+                      onChange={(e) => {
+                        const next = e.target.checked;
+                        setSkipRegion(next);
 
-                  {/* 검색 결과 */}
+                        if (next) {
+                          setRegionSlug("");
+                          setRegionQuery("");
+                          setIsOpen(false);
+                        }
+                      }}
+                      className="h-4 w-4 accent-neutral-900"
+                    />
+                    <label
+                      htmlFor="skip-region"
+                      className="text-sm text-neutral-700"
+                    >
+                      지역 선택 안 함
+                    </label>
+                  </div>
+
                   {isOpen && debouncedRegionQuery.trim().length >= 1 ? (
                     <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg">
                       {isRegionLoading ? (
@@ -326,7 +369,6 @@ export default function WritePost() {
                                 type="button"
                                 className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50"
                                 onMouseDown={(e) => {
-                                  // blur보다 먼저 선택되도록
                                   e.preventDefault();
                                   setRegionSlug(d.slug);
                                   setRegionQuery(d.name);
@@ -351,12 +393,10 @@ export default function WritePost() {
                   <p className="text-xs text-neutral-500">
                     {regionSlug
                       ? `선택됨: ${regionSlug}`
-                      : "검색 결과에서 지역을 선택해주세요."}
+                      : "아직 지역이 없다면 제목에 지역을 포함후 지역 선택 안 함 체크박스를 클릭해주세요."}
                   </p>
                 </div>
 
-                {/* 평점 */}
-                {/* 평점 */}
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-neutral-900">
                     평점
@@ -371,8 +411,6 @@ export default function WritePost() {
               </div>
             ) : null}
 
-
-            {/* Actions */}
             <div className="flex items-center justify-end gap-2">
               <Button
                 type="button"

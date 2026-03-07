@@ -10,7 +10,7 @@ export default function CommunityHeader() {
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h1 className="text-3xl font-bold">커뮤니티</h1>
-        <p className="text-neutral-500 mt-1">자유롭게 글을 남겨보세요.</p>
+        <p className="text-neutral-500 mt-1">자유롭게 글을 남겨보세요!</p>
       </div>
 
       {isAuthenticated ? (

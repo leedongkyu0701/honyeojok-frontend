@@ -1,52 +1,52 @@
 "use client";
-import type { DestinationCardVM } from "@/types/destinations";
+
+import type { DestinationCardResponse } from "@/types/destinations";
 import DestinationCard from "./DestinationCard";
 import { useQuery } from "@tanstack/react-query";
-import { fetchDestinations } from "@/lib/api/destination/api";
+import { fetchDestinations, type DestinationListResponse, type FetchDestinationsParams } from "@/lib/api/destination/api";
 import Skeleton from "@/components/common/Skeleton";
 import EmptyState from "@/components/common/EmptyState";
 import { useEffect } from "react";
-import { DestinationListResponse } from "@/lib/api/destination/api";
-import { FetchDestinationsParams } from "@/lib/api/destination/api";
+import { OverlayLoader } from "../common/OverlayLoader";
+import { keepPreviousData } from "@tanstack/react-query";
 
 const PAGE_SIZE = 12;
 
 export default function DestinationList({
   province,
   sort,
-  query,
   page,
   onTotalPagesChange,
 }: {
   province: FetchDestinationsParams["province"];
   sort: FetchDestinationsParams["sort"];
-  query: string | null;
   page: number;
   onTotalPagesChange?: (total: number) => void;
 }) {
-  const {
-    data: results,
-    isLoading,
-    isError,
-  } = useQuery<DestinationListResponse<DestinationCardVM>>({
-    queryKey: ["destinations", { province, sort, query, page }],
-    queryFn: () => fetchDestinations({ province, sort, q: query, take: PAGE_SIZE, page }),
+  const { data, isLoading, isError, isFetching, isPlaceholderData } = useQuery<
+    DestinationListResponse<DestinationCardResponse>
+  >({
+    queryKey: ["destinations", { province, sort, page }],
+    queryFn: () => fetchDestinations({ province, sort, take: PAGE_SIZE, page }),
+    placeholderData: keepPreviousData,
   });
 
-
   useEffect(() => {
-    onTotalPagesChange?.(results?.totalPages ?? 1);
-  }, [onTotalPagesChange, results?.totalPages]);
+   if (!isPlaceholderData && typeof data?.totalPages === "number") {
+    onTotalPagesChange?.(Math.max(1, data.totalPages));
+  }
+  }, [onTotalPagesChange, data?.totalPages, isPlaceholderData]);
 
   if (isLoading) {
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, index) => (
+        {Array.from({ length: PAGE_SIZE }).map((_, index) => (
           <Skeleton key={index} className="h-48" />
         ))}
       </div>
     );
   }
+
 
   if (isError) {
     return (
@@ -57,28 +57,23 @@ export default function DestinationList({
     );
   }
 
-  if (!(results?.data.length ?? 0)) {
+  if (!data?.data?.length) {
     return (
       <EmptyState
         title="조건에 맞는 여행지가 없어요."
-        description="필터를 변경하거나 검색어를 지워보세요."
+        description="필터를 변경해보세요."
       />
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+        <OverlayLoader show={isFetching && isPlaceholderData} /> 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {(results?.data ?? []).map((destination) => (
-          <DestinationCard
-            key={destination.id}
-            destination={destination as DestinationCardVM}
-          />
+        {data.data.map((destination) => (
+          <DestinationCard key={destination.id} destination={destination} />
         ))}
       </div>
-      <p className="text-sm text-neutral-500">
-        {(results?.data ?? []).length}개의 여행지 중 {(results?.data ?? []).length}개 표시
-      </p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import type { DestinationCardVM } from "@/types/destinations";
-import type { DestinationMapVM } from "@/types/destinations";
-import type { DestinationDetailVM } from "@/types/destinations";
-import type { DestinationFindByQueryVM } from "@/types/destinations";
+import type { DestinationCardResponse } from "@/types/destinations";
+import type { DestinationDetailResponse } from "@/types/destinations";
+import type { DestinationMapResponse } from "@/types/destinations";
+import type { DestinationSearchResponse } from "@/types/destinations";
 import { fetchClient } from "../../fetchClient";
 import { parseApiError } from "../../parseApiError";
 
@@ -12,15 +12,14 @@ export type DestinationListResponse<T> = {
 
 export type FetchDestinationsParams = {
   province?: string | null;
-  sort?: "score" | "reviewCount" | "rank" | null;
-  q?: string | null;
+  sort?: "score" | "rank" | null;
   page?: number;
   take?: number;
 };
 
 export async function fetchDestinations(
   query: FetchDestinationsParams,
-): Promise<DestinationListResponse<DestinationCardVM>> {
+): Promise<DestinationListResponse<DestinationCardResponse>> {
   const queryString = new URLSearchParams();
   if (query.province) {
     queryString.append("province", query.province);
@@ -28,17 +27,11 @@ export async function fetchDestinations(
   if (query.sort) {
     queryString.append("sort", query.sort);
   }
-  if (query.q) {
-    queryString.append("q", query.q);
-  }
-  if (query.page) {
-    queryString.append("page", query.page.toString());
-  }
-  if (query.take) {
-    queryString.append("take", query.take.toString());
-  }
+  if (query.page != null) queryString.append("page", String(query.page));
+  if (query.take != null) queryString.append("take", String(query.take));
+
   const qs = queryString.toString();
-  const response = await fetchClient(`/destinations${qs ? `?${qs}` : ""}`,{
+  const response = await fetchClient(`/destinations${qs ? `?${qs}` : ""}`, {
     skipAuth: true,
   });
 
@@ -46,8 +39,8 @@ export async function fetchDestinations(
   return response.json();
 }
 
-export async function fetchWeeklyPick(): Promise<DestinationCardVM> {
-  const response = await fetchClient(`/destinations/weekly`,{
+export async function fetchWeeklyPick(): Promise<DestinationCardResponse> {
+  const response = await fetchClient(`/destinations/weekly`, {
     skipAuth: true,
     withCredentials: false,
   });
@@ -56,9 +49,9 @@ export async function fetchWeeklyPick(): Promise<DestinationCardVM> {
 }
 
 export async function fetchRecommendedDestinations(): Promise<
-  DestinationCardVM[]
+  DestinationCardResponse[]
 > {
-  const response = await fetchClient(`/destinations/recommended`,{
+  const response = await fetchClient(`/destinations/recommended`, {
     skipAuth: true,
     withCredentials: false,
   });
@@ -68,16 +61,19 @@ export async function fetchRecommendedDestinations(): Promise<
 
 export async function fetchDestinationDetail(
   region: string,
-): Promise<DestinationDetailVM> {
-  const response = await fetchClient(`/destinations/${region}`,{
+): Promise<DestinationDetailResponse> {
+  const response = await fetchClient(`/destinations/${region}`, {
     skipAuth: true,
+    withCredentials: false,
   });
   await parseApiError(response);
   return response.json();
 }
 
-export async function fetchDestinationMapData(): Promise<DestinationMapVM[]> {
-  const response = await fetchClient(`/destinations/map`,{
+export async function fetchDestinationMapData(): Promise<
+  DestinationMapResponse[]
+> {
+  const response = await fetchClient(`/destinations/map`, {
     skipAuth: true,
     withCredentials: false,
   });
@@ -87,11 +83,13 @@ export async function fetchDestinationMapData(): Promise<DestinationMapVM[]> {
 
 export async function searchDestinations(
   query: string,
-): Promise<DestinationFindByQueryVM[] | []> {
+): Promise<DestinationSearchResponse[]> {
   const response = await fetchClient(
-    `/destinations/search?q=${encodeURIComponent(query)}`,{
+    `/destinations/search?q=${encodeURIComponent(query)}`,
+    {
       skipAuth: true,
-    }
+      withCredentials: false,
+    },
   );
   await parseApiError(response);
   return response.json();

@@ -1,25 +1,44 @@
 "use client";
 import Link from "next/link";
 import SocialButton from "./SocialButton";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 const KAKAO_AUTH_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/kakao`;
 const GOOGLE_AUTH_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`;
 const NAVER_AUTH_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/naver`;
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (!error) return;
+
+    if (error === "withdrawn_user") {
+      toast.error("탈퇴한 계정이에요", {
+        description: "재가입할 수 없어요. 다른 계정으로 로그인해주세요.",
+      });
+    } else if (error === "oauth_failed") {
+      toast.error("소셜 로그인에 실패했어요", {
+        description: "다시 시도해주세요.",
+      });
+    }
+    router.replace("/auth/login");
+  }, [router, searchParams]);
+
   return (
     <main className="min-h-[calc(100vh-60px)]">
-      {/* 배경 */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          {/* 은은한 배경 */}
           <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-yellow-200/40 blur-3xl" />
           <div className="absolute -bottom-28 -right-10 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-          <div className="absolute inset-0 bg-linear-to-b from-neutral-50 to-white" />
+          <div className="absolute inset-0 bg-gradient-to-b from-neutral-50 to-white" />
         </div>
 
         <div className="mx-auto flex max-w-md flex-col px-5 py-12">
-          {/* 헤더 */}
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1 text-xs text-neutral-700 shadow-sm backdrop-blur">
               <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
@@ -27,7 +46,7 @@ export default function LoginPage() {
             </div>
 
             <h1 className="mt-4 text-2xl font-bold tracking-tight text-neutral-900">
-              혼여 로그인
+              혼여족 로그인
             </h1>
             <p className="mt-2 text-sm text-neutral-600">
               아이디/비밀번호 없이도 OK. <br className="sm:hidden" />
@@ -35,9 +54,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* 카드 */}
           <section className="rounded-3xl border border-neutral-200 bg-white/70 p-5 shadow-sm backdrop-blur">
-            {/* 혜택/안내 */}
             <div className="mb-4 rounded-2xl bg-neutral-50 p-4">
               <p className="text-sm font-semibold text-neutral-900">
                 처음 오셨나요?
@@ -50,7 +67,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* 소셜 로그인 버튼들 */}
             <div className="mt-2">
               <p className="text-center text-xs font-medium text-neutral-700">
                 SNS 계정으로 간편하게 로그인
@@ -80,7 +96,6 @@ export default function LoginPage() {
               <div className="mt-4 border-t border-neutral-200" />
             </div>
 
-            {/* 보안/개인정보 */}
             <div className="mt-5 border-t border-neutral-200 pt-4">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 grid h-9 w-9 place-items-center rounded-xl bg-neutral-900/5 text-neutral-700">
@@ -117,7 +132,6 @@ export default function LoginPage() {
             </div>
           </section>
 
-          {/* 아래 작은 CTA */}
           <div className="mt-6 rounded-2xl border border-neutral-200 bg-white/70 p-4 text-xs text-neutral-600 shadow-sm backdrop-blur">
             <p className="font-medium text-neutral-800">
               로그인하면 뭐가 좋아?

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(_: NextRequest) {
+export function proxy(_: NextRequest) {
   const res = NextResponse.next();
 
   if (process.env.VERCEL_ENV !== "production") {
@@ -10,3 +10,7 @@ export function middleware(_: NextRequest) {
 
   return res;
 }
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};

@@ -23,49 +23,45 @@ function isAuthCode(code?: ErrorCode) {
   );
 }
 
-/**
- * ✅ AUTH 토스트 중복 방지 가드
- * - fetchClient가 이미 logout을 담당하므로 여기서는 "알림"만 1회 표시
- */
-let authToastHandled = false;
-function toastAuthOnce(title: string, description: string) {
-  if (authToastHandled) return;
-  authToastHandled = true;
+const lastToastAt: Record<string, number> = {};
 
-  toast.error(title, { description });
-
-  setTimeout(() => {
-    authToastHandled = false;
-  }, 1500);
-}
-
-let lastRateToastAt = 0;
-function toastRateLimitOnce() {
+function throttleToast(
+  key: string,
+  title: string,
+  description: string,
+  delay: number,
+) {
   const now = Date.now();
-  if (now - lastRateToastAt < 5000) return; // 5초 이내 중복 방지
-  lastRateToastAt = now;
+  if (now - (lastToastAt[key] || 0) < delay) return;
 
-  toast.error("요청이 너무 많아요", {
-    description: "잠시 후 다시 시도해주세요.",
-  });
+  lastToastAt[key] = now;
+  toast.error(title, { description });
 }
 
+function toastAuthOnce(title: string, description: string) {
+  throttleToast("auth", title, description, 1500);
+}
 
+function toastRateLimitOnce(title: string, description: string) {
+  throttleToast("rate", title, description, 5000);
+}
 
 function handleQueryError(error: unknown) {
-  // Query(조회)는 토스트 남발 방지: AUTH만 예외로 "한 번만" 토스트
   if (error instanceof ApiError) {
     if (isAuthCode(error.code)) {
-      toastAuthOnce("로그인이 필요한 서비스에요.","우측 상단의 로그인 버튼을 눌러주세요.");
+      toastAuthOnce(
+        "로그인이 필요한 서비스에요.",
+        "우측 상단의 로그인 버튼을 눌러주세요.",
+      );
       return;
     }
 
     if (error.code === ErrorCode.RATE_LIMITED) {
-      toastRateLimitOnce();
+      toastRateLimitOnce("요청이 너무 많아요", "잠시만 기다려주세요");
       return;
     }
 
-    // Query는 화면에서 EmptyState로 처리하므로 토스트 X, 대신 로그
+    // Query는 화면에서 EmptyState로 처리하므로 토스트 X, 대신 로그, 나중에 sentry 추가해서 에러 모니터링하기
     if (!isProd) {
       console.error("[Query ApiError]", {
         status: error.status,
@@ -77,7 +73,7 @@ function handleQueryError(error: unknown) {
     return;
   }
   if (!isProd) {
-  console.error("[Query Unknown Error]", error);
+    console.error("[Query Unknown Error]", error);
   }
 }
 
@@ -85,12 +81,15 @@ function handleMutationError(error: unknown) {
   // Mutation(저장/수정/삭제)은 유저 액션이므로 토스트 OK
   if (error instanceof ApiError) {
     if (isAuthCode(error.code)) {
-      toastAuthOnce("로그인이 필요한 서비스에요.","우측 상단의 로그인 버튼을 눌러주세요.");
+      toastAuthOnce(
+        "로그인이 필요한 서비스에요.",
+        "우측 상단의 로그인 버튼을 눌러주세요.",
+      );
       return;
     }
-    
+
     if (error.code === ErrorCode.RATE_LIMITED) {
-      toastRateLimitOnce();
+      toastRateLimitOnce("요청이 너무 많아요", "잠시만 기다려주세요");
       return;
     }
 
@@ -121,7 +120,6 @@ export default function QCProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
-        // ✅ v5 전역 에러 처리: queryCache / mutationCache
         queryCache: new QueryCache({
           onError: handleQueryError,
         }),
@@ -138,10 +136,10 @@ export default function QCProvider({ children }: { children: ReactNode }) {
 
         defaultOptions: {
           queries: {
-            refetchOnWindowFocus: false,
-            staleTime: 1000 * 60 * 5,
+            refetchOnWindowFocus: false, // 탭 간 이동 시 자동 새로고침 비활성화
+            staleTime: 1000 * 60 * 5, // 불필요 중복 요청 방지
+            gcTime: 1000 * 60 * 30, // 캐시 데이터가 메모리에서 완전히 제거되기 전까지의 시간
             retry: (failureCount, err) => {
-              // ✅ 조회는 가벼운 재시도 1번 정도만 (실무에서 흔함)
               if (err instanceof ApiError) {
                 if (isAuthCode(err.code)) return false;
                 if (err.code === ErrorCode.RESOURCE_NOT_FOUND) return false;
@@ -152,15 +150,13 @@ export default function QCProvider({ children }: { children: ReactNode }) {
             },
           },
           mutations: {
-            retry: false, // ✅ mutation은 중복 저장 위험 때문에 보통 꺼둠
+            retry: false,
           },
         },
       }),
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }
