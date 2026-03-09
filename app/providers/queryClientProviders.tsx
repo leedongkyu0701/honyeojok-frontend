@@ -1,4 +1,5 @@
 "use client";
+import * as Sentry from "@sentry/nextjs";
 
 import { ReactNode, useState } from "react";
 import {
@@ -46,6 +47,45 @@ function toastRateLimitOnce(title: string, description: string) {
   throttleToast("rate", title, description, 5000);
 }
 
+function shouldReportToSentry(error: unknown) {
+  if (error instanceof ApiError) {
+    if (isAuthCode(error.code)) return false;
+    if (error.code === ErrorCode.RATE_LIMITED) return false;
+    if (error.code === ErrorCode.BAD_REQUEST) return false;
+    if (error.code === ErrorCode.RESOURCE_NOT_FOUND) return false;
+
+    return error.status >= 500;
+  }
+
+  return true;
+}
+
+function reportToSentry(error: unknown, source: "query" | "mutation") {
+  if (!shouldReportToSentry(error)) return;
+
+  if (error instanceof ApiError) {
+    Sentry.captureException(error, {
+      tags: {
+        source,
+        errorType: "ApiError",
+      },
+      extra: {
+        status: error.status,
+        code: error.code,
+        requestId: error.requestId,
+      },
+    });
+    return;
+  }
+
+  Sentry.captureException(error, {
+    tags: {
+      source,
+      errorType: "UnknownError",
+    },
+  });
+}
+
 function handleQueryError(error: unknown) {
   if (error instanceof ApiError) {
     if (isAuthCode(error.code)) {
@@ -61,7 +101,8 @@ function handleQueryError(error: unknown) {
       return;
     }
 
-    // Query는 화면에서 EmptyState로 처리하므로 토스트 X, 대신 로그, 나중에 sentry 추가해서 에러 모니터링하기
+    reportToSentry(error, "query");
+
     if (!isProd) {
       console.error("[Query ApiError]", {
         status: error.status,
@@ -72,6 +113,7 @@ function handleQueryError(error: unknown) {
     }
     return;
   }
+  reportToSentry(error, "query");
   if (!isProd) {
     console.error("[Query Unknown Error]", error);
   }
@@ -97,6 +139,8 @@ function handleMutationError(error: unknown) {
       description: error.message || "잠시 후 다시 시도해주세요.",
     });
 
+    reportToSentry(error, "mutation");
+
     if (!isProd) {
       console.error("[Mutation ApiError]", {
         status: error.status,
@@ -107,6 +151,8 @@ function handleMutationError(error: unknown) {
     }
     return;
   }
+
+  reportToSentry(error, "mutation");
 
   toast.error("알 수 없는 오류가 발생했어요", {
     description: "잠시 후 다시 시도해주세요.",
