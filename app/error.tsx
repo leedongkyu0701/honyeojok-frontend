@@ -1,12 +1,21 @@
- "use client";
+"use client";
 
+import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function GlobalError({
+  error,
   reset,
 }: {
+  error: Error;
   reset: () => void;
 }) {
+
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center gap-6 px-6 text-center">
       <div className="space-y-2">
@@ -41,7 +50,6 @@ export default function GlobalError({
       <p className="text-xs text-neutral-500">
         문제가 계속되면 새로고침 후 다시 시도해주세요.
       </p>
-
     </div>
   );
 }
