@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalLayout title="이용약관" updatedAt="2026-01-29">
+    <LegalLayout title="이용약관" updatedAt="2026-03-08">
       <LegalSection title="제1조 (목적)">
         본 약관은 혼여족(이하 “서비스”)가 제공하는 기능(콘텐츠 열람, 커뮤니티 작성,
         북마크 등)의 이용과 관련하여 서비스와 이용자 간의 권리·의무 및 책임사항,
@@ -29,7 +29,7 @@ export default function TermsPage() {
       </LegalSection>
 
       <LegalSection title="제4조 (회원가입 및 계정)">
-        회원가입은 이용자가 소셜 로그인(카카오/구글/네이버/애플 등)을 통해 인증을 완료하고
+        회원가입은 이용자가 소셜 로그인(카카오/구글/네이버 등)을 통해 인증을 완료하고
         서비스가 이를 승인함으로써 성립합니다. 이용자는 타인의 정보를 도용하거나
         부정한 방법으로 계정을 생성·이용할 수 없습니다.
       </LegalSection>
@@ -63,7 +63,7 @@ export default function TermsPage() {
           <li>서비스 홍보 목적의 사용(예: 서비스 내/공식 SNS/소개 페이지/홍보 이미지·배너 등)</li>
         </ul>
         <p className="mt-2 text-sm text-neutral-600">
-          ※ “홍보 목적”은 서비스 및 기능 소개를 위한 합리적인 범위로 한정합니다.
+          ※ 다만 이용자의 콘텐츠는 서비스 운영 및 홍보 목적의 합리적인 범위 내에서만 사용됩니다.
         </p>
         <p className="mt-3">
           ③ 이용자가 콘텐츠를 삭제하거나 탈퇴하는 경우, 서비스는 합리적인 범위에서 해당 콘텐츠의 노출을 중단합니다.

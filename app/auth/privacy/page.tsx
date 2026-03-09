@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalLayout title="개인정보처리방침" updatedAt="2026-01-29">
+    <LegalLayout title="개인정보처리방침" updatedAt="2026-03-08">
       <LegalSection title="1. 개인정보의 처리 목적">
         혼여족(이하 “서비스”)는 다음 목적을 위해 개인정보를 처리합니다.
         <ul className="mt-2 list-disc pl-5 space-y-1">
@@ -44,8 +44,9 @@ export default function PrivacyPage() {
       <LegalSection title="3. 개인정보의 처리 및 보유 기간">
         서비스는 원칙적으로{" "}
         <span className="font-medium">회원 탈퇴 시 지체 없이 파기</span>합니다.
-        다만 게시물 등 서비스 운영상 필요한 정보는 개인 식별이 불가능하도록 처리(익명화)한 후 보관할 수 있으며,
-         다음의 경우는 예외로 보관할 수 있습니다.
+        다만 게시물 등 서비스 운영상 필요한 정보는 개인 식별이 불가능하도록
+        처리(익명화)한 후 보관할 수 있으며, 다음의 경우는 예외로 보관할 수
+        있습니다.
         <ul className="mt-2 list-disc pl-5 space-y-1">
           <li>부정 이용 방지 및 분쟁 대응: 최소 범위에서 일정 기간 보관</li>
           <li>관계 법령에 따라 보관이 필요한 경우: 해당 법령에서 정한 기간</li>
@@ -76,11 +77,48 @@ export default function PrivacyPage() {
       </LegalSection>
 
       <LegalSection title="6. 국외 이전">
-        서비스는 클라우드 인프라/호스팅/저장소 제공 과정에서 개인정보가
-        국외(또는 국외 서버를 경유)하여 처리·저장될 수 있습니다. 국외 이전이
-        발생하는 경우, 이전되는 개인정보 항목, 이전 국가/이전받는 자(수탁자),
-        이전 목적·방법 및 보유기간을 본 방침 또는 별도 고지를 통해 안내하고 관련
-        법령에 따른 필요한 조치를 이행합니다.
+        서비스는 클라우드 인프라 및 CDN 서비스를 이용하여 운영되며, 서비스 제공
+        과정에서 개인정보가 국외 서버에서 처리되거나 국외 서버를 경유할 수
+        있습니다.
+        <ul className="mt-2 list-disc pl-5 space-y-1">
+          <li>
+            <span className="font-medium">이전 항목</span>: 회원 식별정보, 접속
+            정보, 이용 기록, 업로드한 이미지 또는 게시 콘텐츠 일부
+          </li>
+          <li>
+            <span className="font-medium">이전 목적</span>: 서비스 제공, 데이터
+            저장 및 처리, 이미지 전송, 보안 및 운영 관리
+          </li>
+          <li>
+            <span className="font-medium">이전 방법</span>: 서비스 이용 시
+            네트워크를 통한 전송
+          </li>
+        </ul>
+        <div className="mt-3 text-sm">
+          서비스에서 사용하는 주요 인프라는 다음과 같습니다.
+          <ul className="mt-2 list-disc pl-5 space-y-1">
+            <li>
+              <span className="font-medium">Render</span>: 백엔드 서버 호스팅
+              (싱가포르 리전)
+            </li>
+            <li>
+              <span className="font-medium">Supabase</span>: 데이터베이스 서비스
+              (싱가포르 리전)
+            </li>
+            <li>
+              <span className="font-medium">Vercel</span>: 프론트엔드 호스팅 및
+              배포 (글로벌 CDN 기반 인프라)
+            </li>
+            <li>
+              <span className="font-medium">Cloudflare</span>: CDN 및 이미지
+              전송 인프라 (글로벌 CDN)
+            </li>
+          </ul>
+        </div>
+        <div className="mt-2 text-sm text-neutral-600">
+          클라우드 인프라의 특성상 서비스 이용 과정에서 개인정보가 국외 서버를
+          통해 처리되거나 전송될 수 있습니다.
+        </div>
       </LegalSection>
 
       <LegalSection title="7. 이용자의 권리와 행사 방법">
@@ -130,7 +168,7 @@ export default function PrivacyPage() {
       </LegalSection>
 
       <LegalSection title="13. 시행일 및 변경">
-        본 방침은 <span className="font-medium">2026-01-29</span>부터
+        본 방침은 <span className="font-medium">2026-03-08</span>부터
         적용됩니다. 내용 추가/삭제/수정이 있는 경우 서비스 내 공지 또는 본
         페이지를 통해 고지합니다.
       </LegalSection>
