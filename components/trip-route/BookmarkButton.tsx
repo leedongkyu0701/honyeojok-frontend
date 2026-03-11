@@ -81,6 +81,7 @@ export default function BookmarkButton({
   });
 
   const handleClick = () => {
+    if (mutation.isPending) return;
     mutation.mutate();
   };
 

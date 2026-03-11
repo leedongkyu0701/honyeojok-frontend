@@ -57,6 +57,12 @@ function shouldReportToSentry(error: unknown) {
     return error.status >= 500;
   }
 
+  if (error instanceof TypeError) {
+    if (error.message.includes("Failed to fetch")) {
+      return false;
+    }
+  }
+
   return true;
 }
 
