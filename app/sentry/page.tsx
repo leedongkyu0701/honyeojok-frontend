@@ -9,7 +9,7 @@ export default function SentryTraceTestPage() {
     try {
       setResult("요청 중...");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/health`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/debug/trace-check`,
         {
           method: "GET",
           credentials: "include",
@@ -23,6 +23,8 @@ export default function SentryTraceTestPage() {
       setResult("성공 요청 실패");
     }
   }
+
+  
 
   async function handleErrorRequest() {
     try {
