@@ -7,7 +7,7 @@ Sentry.init({
   enabled: process.env.NEXT_PUBLIC_ENABLE_SENTRY === "true",
   integrations: [Sentry.replayIntegration()],
   environment: process.env.NEXT_PUBLIC_APP_ENV,
-  tracesSampleRate: 0.1,
+  tracesSampleRate: 0.05,
   replaysSessionSampleRate: 0.0,
   replaysOnErrorSampleRate: 1.0,
 
