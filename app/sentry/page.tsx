@@ -9,7 +9,7 @@ export default function SentryTraceTestPage() {
     try {
       setResult("요청 중...");
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/debug/trace-check`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/debug/debug/trace-check`,
         {
           method: "GET",
           credentials: "include",
