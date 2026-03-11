@@ -10,6 +10,11 @@ Sentry.init({
   tracesSampleRate: 0.1,
   replaysSessionSampleRate: 0.0,
   replaysOnErrorSampleRate: 1.0,
+
+  tracePropagationTargets: [
+    process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.honyeo.com",
+  ],
+    
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
