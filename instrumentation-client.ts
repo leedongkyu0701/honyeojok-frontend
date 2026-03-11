@@ -6,7 +6,7 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   enabled: process.env.NEXT_PUBLIC_ENABLE_SENTRY === "true",
   integrations: [Sentry.replayIntegration()],
-  environment: process.env.VERCEL_ENV,
+  environment: process.env.NODE_ENV,
   tracesSampleRate: 0.1,
   replaysSessionSampleRate: 0.0,
   replaysOnErrorSampleRate: 1.0,
