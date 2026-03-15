@@ -16,7 +16,6 @@ export type PostCardResponse = {
 
   createdAt: string;
   
-
   nickName: string;
 
   likeCount: number;
