@@ -15,7 +15,7 @@ export type PostCardResponse = {
   regionName?: string;
 
   createdAt: string;
-
+  
   nickName: string;
 
   likeCount: number;

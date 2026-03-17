@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import SocialButton from "./SocialButton";
-import { useEffect } from "react";
+import { useEffect} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
@@ -28,6 +28,7 @@ export default function LoginPage() {
     }
     router.replace("/auth/login");
   }, [router, searchParams]);
+
 
   return (
     <main className="min-h-[calc(100vh-60px)]">
