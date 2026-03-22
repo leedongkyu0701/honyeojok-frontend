@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CategoryType } from "@/types/community";
 import { createPost } from "@/lib/api/community/api";
 import { useRouter } from "next/navigation";
@@ -19,9 +19,20 @@ import ImageUploader, {
 import StarRating from "../common/StarRating";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
-import { se } from "date-fns/locale";
+
+import { useForm, Controller, useWatch } from "react-hook-form";
+
 const MAX_SIZE_MB = 6;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+type WritePostFormValues = {
+  type: CategoryType;
+  title: string;
+  content: string;
+  regionSlug: string;
+  rating: number;
+  skipRegion: boolean;
+};
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -37,22 +48,38 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function WritePost() {
   const router = useRouter();
 
-  const [type, setType] = useState<CategoryType>("FREE");
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-
-  const [regionSlug, setRegionSlug] = useState("");
-  const [regionQuery, setRegionQuery] = useState("");
-  const [rating, setRating] = useState<number>(0);
-  const [skipRegion, setSkipRegion] = useState(false);
-
   const [images, setImages] = useState<FileWithPreview[]>([]);
+  const [regionQuery, setRegionQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState<string[]>([]);
+  const imagesRef = useRef<FileWithPreview[]>([]);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<WritePostFormValues>({
+    defaultValues: {
+      type: "FREE",
+      title: "",
+      content: "",
+      regionSlug: "",
+      rating: 0,
+      skipRegion: false,
+    },
+  });
+
+  const type = useWatch({ control, name: "type" });
+  const content = useWatch({ control, name: "content" });
+  const regionSlug = useWatch({ control, name: "regionSlug" });
+  const skipRegion = useWatch({ control, name: "skipRegion" });
 
   const debouncedRegionQuery = useDebounce(regionQuery, 400);
-  const imagesRef = useRef<FileWithPreview[]>([]);
+  const maxImages = 5;
 
   const { data: regionSuggestions, isLoading: isRegionLoading } = useQuery({
     queryKey: ["search-destinations", debouncedRegionQuery],
@@ -64,19 +91,19 @@ export default function WritePost() {
       !skipRegion,
   });
 
-  const maxImages = 5;
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
 
-  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedType = e.target.value as CategoryType;
-    if (selectedType !== "REVIEW") {
-      setRegionSlug("");
-      setRegionQuery("");
-      setRating(0);
-      setIsOpen(false);
-      setSkipRegion(false);
-    }
-    setType(selectedType);
-  };
+  useEffect(() => {
+    return () => {
+      imagesRef.current.forEach((img) => {
+        try {
+          URL.revokeObjectURL(img.preview);
+        } catch {}
+      });
+    };
+  }, []);
 
   const handleAddFiles = (files: FileList | null) => {
     if (!files) return;
@@ -108,30 +135,6 @@ export default function WritePost() {
       return prev.filter((_, i) => i !== index);
     });
   };
-
-  useEffect(() => {
-    imagesRef.current = images;
-  }, [images]);
-
-  useEffect(() => {
-    return () => {
-      imagesRef.current.forEach((img) => {
-        try {
-          URL.revokeObjectURL(img.preview);
-        } catch {}
-      });
-    };
-  }, []);
-
-  const canSubmit = useMemo(() => {
-    if (!title.trim()) return false;
-    if (!content.trim()) return false;
-    if (type === "REVIEW") {
-      if (!regionSlug && !skipRegion) return false;
-      if (rating < 0 || rating > 5) return false;
-    }
-    return true;
-  }, [title, content, type, regionSlug, rating, skipRegion]);
 
   const createPostMutation = useMutation({
     mutationFn: (formData: FormData) => createPost(formData),
@@ -179,32 +182,25 @@ export default function WritePost() {
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const t = title.trim();
-    const c = content.trim();
-
-    if (!t || !c) {
-      setErrorMessage(["제목과 내용을 입력해주세요."]);
-      return;
-    }
-
-    if (type === "REVIEW" && !regionSlug && !skipRegion) {
-      setErrorMessage(["리뷰는 지역을 선택해주세요."]);
+  const onSubmit = async (data: WritePostFormValues) => {
+    if (data.type === "REVIEW" && !data.regionSlug && !data.skipRegion) {
+      setError("regionSlug", {
+        type: "manual",
+        message: "리뷰 게시글은 지역 선택이 필요해요.",
+      });
       return;
     }
 
     setErrorMessage([]);
 
     const formData = new FormData();
-    formData.append("title", t);
-    formData.append("content", c);
-    formData.append("type", type);
+    formData.append("title", data.title.trim());
+    formData.append("content", data.content.trim());
+    formData.append("type", data.type);
 
-    if (type === "REVIEW" && !skipRegion) {
-      formData.append("regionSlug", regionSlug);
-      formData.append("rating", String(rating));
+    if (data.type === "REVIEW" && !data.skipRegion) {
+      formData.append("regionSlug", data.regionSlug);
+      formData.append("rating", String(data.rating));
     }
 
     images.forEach((file) => {
@@ -247,14 +243,26 @@ export default function WritePost() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-neutral-900">
                 게시판
               </label>
               <select
-                value={type}
-                onChange={handleTypeChange}
+                {...register("type", {
+                  onChange: (e) => {
+                    const nextType = e.target.value as CategoryType;
+
+                    if (nextType !== "REVIEW") {
+                      setValue("regionSlug", "");
+                      setValue("rating", 0);
+                      setValue("skipRegion", false);
+                      setRegionQuery("");
+                      clearErrors("regionSlug");
+                      setIsOpen(false);
+                    }
+                  },
+                })}
                 className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
               >
                 <option value="FREE">일반 게시글</option>
@@ -274,12 +282,17 @@ export default function WritePost() {
               </label>
               <input
                 type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                {...register("title", {
+                  required: "제목을 입력해주세요.",
+                  validate: (value) =>
+                    value.trim() !== "" || "제목을 입력해주세요.", // 실패시 setError로 메시지 전달, 성공시 true 반환
+                })}
                 placeholder="제목을 입력하세요"
                 className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
-                required
               />
+              {errors.title && (
+                <p className="text-xs text-red-600">{errors.title.message}</p>
+              )}
             </div>
 
             <ImageUploader
@@ -295,14 +308,19 @@ export default function WritePost() {
                 내용
               </label>
               <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
+                {...register("content", {
+                  required: "내용을 입력해주세요.",
+                  validate: (value) =>
+                    value.trim() !== "" || "내용을 입력해주세요.",
+                })}
                 placeholder="내용을 입력하세요"
                 className="h-44 w-full resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
-                required
               />
+              {errors.content && (
+                <p className="text-xs text-red-600">{errors.content.message}</p>
+              )}
               <div className="flex justify-between text-xs text-neutral-500">
-                <span>{content.length}자</span>
+                <span>{content.length || 0}자</span>
               </div>
             </div>
 
@@ -320,7 +338,8 @@ export default function WritePost() {
                     onChange={(e) => {
                       if (skipRegion) return;
                       setRegionQuery(e.target.value);
-                      setRegionSlug("");
+                      setValue("regionSlug", "");
+                      clearErrors("regionSlug");
                       setIsOpen(true);
                     }}
                     placeholder="예) 묵호, 서울, 강릉..."
@@ -330,21 +349,28 @@ export default function WritePost() {
                       setTimeout(() => setIsOpen(false), 150);
                     }}
                   />
+                  {errors.regionSlug && (
+                    <p className="text-xs text-red-600">
+                      {errors.regionSlug.message}
+                    </p>
+                  )}
+
                   <div className="ml-2 flex items-center gap-2">
                     <input
                       id="skip-region"
                       type="checkbox"
-                      checked={skipRegion}
-                      onChange={(e) => {
-                        const next = e.target.checked;
-                        setSkipRegion(next);
+                      {...register("skipRegion", {
+                        onChange: (e) => {
+                          const checked = e.target.checked;
 
-                        if (next) {
-                          setRegionSlug("");
-                          setRegionQuery("");
-                          setIsOpen(false);
-                        }
-                      }}
+                          if (checked) {
+                            setValue("regionSlug", "");
+                            setRegionQuery("");
+                            clearErrors("regionSlug");
+                            setIsOpen(false);
+                          }
+                        },
+                      })}
                       className="h-4 w-4 accent-neutral-900"
                     />
                     <label
@@ -370,7 +396,10 @@ export default function WritePost() {
                                 className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50"
                                 onMouseDown={(e) => {
                                   e.preventDefault();
-                                  setRegionSlug(d.slug);
+                                  setValue("regionSlug", d.slug, {
+                                    shouldValidate: true,
+                                  });
+                                  clearErrors("regionSlug");
                                   setRegionQuery(d.name);
                                   setIsOpen(false);
                                 }}
@@ -402,7 +431,17 @@ export default function WritePost() {
                     평점
                   </label>
 
-                  <StarRating value={rating} onChange={(v) => setRating(v)} />
+                  {/* <StarRating value={rating} onChange={(v) => setRating(v)} /> */}
+                  <Controller
+                    name="rating"
+                    control={control}
+                    render={({ field }) => (
+                      <StarRating
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
 
                   <p className="text-xs text-neutral-500">
                     별을 클릭해서 1~5점으로 평가해주세요.
@@ -423,7 +462,7 @@ export default function WritePost() {
                 취소
               </Button>
 
-              <Button type="submit" disabled={isSubmitting || !canSubmit}>
+              <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "업로드 중..." : "작성"}
               </Button>
             </div>
