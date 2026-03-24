@@ -21,18 +21,11 @@ import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
 
 import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { writePostSchema, WritePostFormValues } from "@/lib/schemas/community";
 
 const MAX_SIZE_MB = 6;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-
-type WritePostFormValues = {
-  type: CategoryType;
-  title: string;
-  content: string;
-  regionSlug: string;
-  rating: number;
-  skipRegion: boolean;
-};
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -59,10 +52,11 @@ export default function WritePost() {
     handleSubmit,
     control,
     setValue,
-    setError,
     clearErrors,
+    trigger,
     formState: { errors },
   } = useForm<WritePostFormValues>({
+    resolver: zodResolver(writePostSchema),
     defaultValues: {
       type: "FREE",
       title: "",
@@ -183,14 +177,6 @@ export default function WritePost() {
   };
 
   const onSubmit = async (data: WritePostFormValues) => {
-    if (data.type === "REVIEW" && !data.regionSlug && !data.skipRegion) {
-      setError("regionSlug", {
-        type: "manual",
-        message: "리뷰 게시글은 지역 선택이 필요해요.",
-      });
-      return;
-    }
-
     setErrorMessage([]);
 
     const formData = new FormData();
@@ -198,8 +184,10 @@ export default function WritePost() {
     formData.append("content", data.content.trim());
     formData.append("type", data.type);
 
-    if (data.type === "REVIEW" && !data.skipRegion) {
-      formData.append("regionSlug", data.regionSlug);
+    if (data.type === "REVIEW") {
+      if (!data.skipRegion) {
+        formData.append("regionSlug", data.regionSlug);
+      }
       formData.append("rating", String(data.rating));
     }
 
@@ -258,8 +246,10 @@ export default function WritePost() {
                       setValue("rating", 0);
                       setValue("skipRegion", false);
                       setRegionQuery("");
-                      clearErrors("regionSlug");
                       setIsOpen(false);
+                      clearErrors(["regionSlug", "rating"]);
+                    } else {
+                      void trigger(["regionSlug", "rating"]);
                     }
                   },
                 })}
@@ -282,11 +272,14 @@ export default function WritePost() {
               </label>
               <input
                 type="text"
-                {...register("title", {
-                  required: "제목을 입력해주세요.",
-                  validate: (value) =>
-                    value.trim() !== "" || "제목을 입력해주세요.", // 실패시 setError로 메시지 전달, 성공시 true 반환
-                })}
+                {
+                  ...register("title")
+                  //    { 원래 여기서 유효성 검사를 했었는데, 지금은 zod에서 하고 있어서 주석 처리
+                  //   required: "제목을 입력해주세요.",
+                  //   validate: (value) =>
+                  //     value.trim() !== "" || "제목을 입력해주세요.", // 실패시 setError로 메시지 전달, 성공시 true 반환
+                  // }
+                }
                 placeholder="제목을 입력하세요"
                 className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
               />
@@ -308,11 +301,7 @@ export default function WritePost() {
                 내용
               </label>
               <textarea
-                {...register("content", {
-                  required: "내용을 입력해주세요.",
-                  validate: (value) =>
-                    value.trim() !== "" || "내용을 입력해주세요.",
-                })}
+                {...register("content")}
                 placeholder="내용을 입력하세요"
                 className="h-44 w-full resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
               />
@@ -366,8 +355,8 @@ export default function WritePost() {
                           if (checked) {
                             setValue("regionSlug", "");
                             setRegionQuery("");
-                            clearErrors("regionSlug");
                             setIsOpen(false);
+                            clearErrors("regionSlug");
                           }
                         },
                       })}
@@ -399,7 +388,6 @@ export default function WritePost() {
                                   setValue("regionSlug", d.slug, {
                                     shouldValidate: true,
                                   });
-                                  clearErrors("regionSlug");
                                   setRegionQuery(d.name);
                                   setIsOpen(false);
                                 }}
@@ -438,10 +426,19 @@ export default function WritePost() {
                     render={({ field }) => (
                       <StarRating
                         value={field.value}
-                        onChange={field.onChange}
+                        onChange={(v) => {
+                          field.onChange(v);
+                          trigger("rating");
+                        }}
+                      
                       />
                     )}
                   />
+                  {errors.rating && (
+                    <p className="text-xs text-red-600">
+                      {errors.rating.message}
+                    </p>
+                  )}
 
                   <p className="text-xs text-neutral-500">
                     별을 클릭해서 1~5점으로 평가해주세요.
