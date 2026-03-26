@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { CategoryType } from "@/types/community";
+import type { CategoryType } from "@/lib/schemas/community/response";
 import { ProvinceGroup } from "@/types/util";
 
 export type CommunityFilterState = {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CategoryType } from "@/types/community";
+import type { CategoryType } from "@/lib/schemas/community/response";
 import { ProvinceGroup } from "@/types/util";
 import { cn } from "@/lib/utils";
 import Button from "../common/Button";

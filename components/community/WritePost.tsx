@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { CategoryType } from "@/types/community";
+import type { CategoryType } from "@/lib/schemas/community/response";
 import { createPost } from "@/lib/api/community/api";
 import { useRouter } from "next/navigation";
 
@@ -22,7 +22,7 @@ import { ErrorCode } from "@/types/error-code";
 
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { writePostSchema, WritePostFormValues } from "@/lib/schemas/community";
+import { writePostSchema, WritePostFormValues } from "@/lib/schemas/community/form";
 
 const MAX_SIZE_MB = 6;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;

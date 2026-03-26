@@ -24,7 +24,7 @@ import RouteCard from "@/components/trip-route/RouteCard";
 
 import type { ProfileResponse } from "@/types/user";
 import type { TripRouteCardResponse } from "@/types/trip-routes";
-import type { PostCardResponse } from "@/types/community";
+import type { PostCardResponse } from "@/lib/schemas/community/response";
 import {
   fetchMeApi,
   updateNickname,

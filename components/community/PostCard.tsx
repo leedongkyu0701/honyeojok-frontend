@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { PostCardResponse } from "@/types/community";
+import type { PostCardResponse } from "@/lib/schemas/community/response";
 import { Card } from "@/components/common/Card";
 import { cn } from "@/lib/utils";
 import { timeAgoOrDate } from "@/lib/timeAgo";

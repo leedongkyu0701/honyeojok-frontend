@@ -7,7 +7,7 @@ import EmptyState from "@/components/common/EmptyState";
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchBestPosts } from "@/lib/api/community/api";
-import type { PostCardResponse } from "@/types/community";
+import type { PostCardResponse } from "@/lib/schemas/community/response";
 import PostCard from "@/components/community/PostCard";
 import Link from "next/link";
 import Button from "@/components/common/Button";

@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 import { fetchPosts } from "@/lib/api/community/api";
-import type { PostCardResponse, PostType } from "@/types/community";
+import type { PostCardResponse, PostType } from "@/lib/schemas/community/response";
 
 import PostCard from "./PostCard";
 import Button from "@/components/common/Button";

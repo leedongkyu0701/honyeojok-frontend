@@ -1,17 +1,17 @@
 import { fetchClient } from "@/lib/fetchClient";
 import { parseApiError } from "@/lib/parseApiError";
 import { ProvinceGroup } from "@/types/util";
-import type {
-  PostCardResponse,
-  PostDetailResponse,
-  PostType,
-  CommentResponse,
-} from "@/types/community";
+import {
+  postCardSchema,
+  postDetailSchema,
+  commentsSchema,
+  commentSchema,
+  likePostResponseSchema,
+  postListSchema,
+  postCardListSchema,
+  type PostType,
+} from "@/lib/schemas/community/response";
 
-export type PostListResponse<T> = {
-  posts: T[];
-  totalPages: number;
-};
 
 export type FindPostsParams = {
   page?: number | null;
@@ -21,9 +21,7 @@ export type FindPostsParams = {
   province?: ProvinceGroup | null;
 };
 
-export async function fetchPosts(
-  params: FindPostsParams = {},
-): Promise<PostListResponse<PostCardResponse>> {
+export async function fetchPosts(params: FindPostsParams = {}) {
   const qs = new URLSearchParams();
 
   if (params.page != null) qs.append("page", String(params.page));
@@ -37,7 +35,8 @@ export async function fetchPosts(
   });
 
   await parseApiError(response);
-  return response.json();
+  const data = await response.json();
+  return postListSchema.parse(data);
 }
 
 export async function incrementPostViewCount(postId: number): Promise<void> {
@@ -49,18 +48,17 @@ export async function incrementPostViewCount(postId: number): Promise<void> {
   await parseApiError(response);
 }
 
-export async function fetchBestPosts(): Promise<PostCardResponse[]> {
+export async function fetchBestPosts() {
   const response = await fetchClient(`/posts/best`, {
     skipAuth: true,
     withCredentials: false,
   });
   await parseApiError(response);
-  return response.json();
+  const data = await response.json();
+  return postCardListSchema.parse(data);
 }
 
-export async function fetchPostsByRegionSlug(
-  regionSlug: string,
-): Promise<PostCardResponse[]> {
+export async function fetchPostsByRegionSlug(regionSlug: string) {
   const response = await fetchClient(
     `/posts/region/${encodeURIComponent(regionSlug)}`,
     {
@@ -69,23 +67,27 @@ export async function fetchPostsByRegionSlug(
     },
   );
   await parseApiError(response);
-  return response.json();
+  const data = await response.json();
+  return postCardListSchema.parse(data);
 }
 
-export async function fetchPostDetail(postId: number): Promise<PostDetailResponse> {
+export async function fetchPostDetail(postId: number) {
   const response = await fetchClient(`/posts/${postId}`);
   await parseApiError(response);
-  return response.json();
+  const data = await response.json();
+  return postDetailSchema.parse(data);
 }
 
-
-export async function createPost(formData: FormData): Promise<PostCardResponse> {
+export async function createPost(
+  formData: FormData,
+) {
   const response = await fetchClient("/posts", {
     method: "POST",
     body: formData,
   });
   await parseApiError(response);
-  return response.json();
+  const data = await response.json();
+  return postCardSchema.parse(data);
 }
 
 export async function deletePost(postId: number): Promise<void> {
@@ -95,20 +97,20 @@ export async function deletePost(postId: number): Promise<void> {
   await parseApiError(response);
 }
 
-export type LikePostResponse = { liked: boolean; likeCount: number };
-
-export async function likePost(postId: number): Promise<LikePostResponse> {
+export async function likePost(postId: number) {
   const response = await fetchClient(`/posts/${postId}/like`, {
     method: "POST",
   });
   await parseApiError(response);
-  return response.json();
+  const data = await response.json();
+  return likePostResponseSchema.parse(data);
 }
 
-export async function fetchComments(postId: number): Promise<CommentResponse[]> {
+export async function fetchComments(postId: number) {
   const response = await fetchClient(`/posts/${postId}/comments`);
   await parseApiError(response);
-  return response.json();
+  const data = await response.json();
+  return commentsSchema.parse(data);
 }
 
 export type CreateCommentBody = {
@@ -116,10 +118,7 @@ export type CreateCommentBody = {
   parentId?: number | null;
 };
 
-export async function createComment(
-  postId: number,
-  body: CreateCommentBody,
-): Promise<CommentResponse> {
+export async function createComment(postId: number, body: CreateCommentBody) {
   const response = await fetchClient(`/posts/${postId}/comments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -127,7 +126,8 @@ export async function createComment(
   });
 
   await parseApiError(response);
-  return response.json();
+  const data = await response.json();
+  return commentSchema.parse(data);
 }
 
 export async function deleteComment(commentId: number): Promise<void> {

@@ -7,7 +7,7 @@ import EmptyState from "@/components/common/EmptyState";
 import Skeleton from "@/components/common/Skeleton";
 import PostCard from "@/components/community/PostCard";
 
-import type { PostCardResponse } from "@/types/community";
+import type { PostCardResponse } from "@/lib/schemas/community/response";
 import { fetchPostsByRegionSlug } from "@/lib/api/community/api";
 import Button from "../common/Button";
 

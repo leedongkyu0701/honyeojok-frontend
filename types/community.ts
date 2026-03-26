@@ -1,74 +1,74 @@
-export type PostType = "REVIEW" | "FREE" | "QUESTION";
+// // export type PostType = "REVIEW" | "FREE" | "QUESTION";
 
-export type CategoryType = "ALL" | PostType;
+// // export type CategoryType = "ALL" | PostType;
 
-export type PostImageBlockItem = {
-  url: string;
-  caption: string | null;
-};
+// // export type PostImageBlockItem = {
+// //   url: string;
+// //   caption: string | null;
+// // };
 
-export type PostCardResponse = {
-  id: number;
-  title: string;
+// // export type PostCardResponse = {
+// //   id: number;
+// //   title: string;
 
-  region?: string;
-  regionName?: string;
+// //   region?: string;
+// //   regionName?: string;
 
-  createdAt: string;
+// //   createdAt: string;
   
-  nickName: string;
+// //   nickName: string;
 
-  likeCount: number;
-  viewCount: number;
+// //   likeCount: number;
+// //   viewCount: number;
 
-  thumbnailUrl?: string;
+// //   thumbnailUrl?: string;
 
-  type: PostType;
-};
+// //   type: PostType;
+// // };
 
-export type PostDetailResponse = {
-  id: number;
-  title: string;
+// // export type PostDetailResponse = {
+// //   id: number;
+// //   title: string;
 
-  region?: string;
-  regionName?: string;
+// //   region?: string;
+// //   regionName?: string;
 
-  createdAt: string;
+// //   createdAt: string;
 
-  nickName: string;
+// //   nickName: string;
 
-  content: string;
+// //   content: string;
 
-  type: PostType;
+// //   type: PostType;
 
-  rating?: number;
+// //   rating?: number;
 
-  images: PostImageBlockItem[];
+// //   images: PostImageBlockItem[];
 
-  likeCount: number;
-  viewCount: number;
+// //   likeCount: number;
+// //   viewCount: number;
 
-  likedByMe: boolean;
-};
+// //   likedByMe: boolean;
+// // };
 
 
-export type CommentUserResponse = {
-  id: number;
-  nickName: string;
-};
+// export type CommentUserResponse = {
+//   id: number;
+//   nickName: string;
+// };
 
-export type CommentResponse = {
-  id: number;
-  content: string;
-  isDeleted: boolean;
+// export type CommentResponse = {
+//   id: number;
+//   content: string;
+//   isDeleted: boolean;
 
-  createdAt: string;
+//   createdAt: string;
 
-  postId: number;
-  userId: number;
-  parentId: number | null;
+//   postId: number;
+//   userId: number;
+//   parentId: number | null;
 
-  user: CommentUserResponse;
+//   user: CommentUserResponse;
 
-  children: CommentResponse[];
-};
+//   children: CommentResponse[];
+// };

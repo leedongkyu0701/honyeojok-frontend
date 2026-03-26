@@ -2,8 +2,6 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-import type { CommentResponse } from "@/types/community";
 import {
   fetchComments,
   createComment,
@@ -24,7 +22,7 @@ export default function CommentsSection({ postId }: { postId: number }) {
   const [replyValue, setReplyValue] = useState("");
   const replyFormRef = useRef<HTMLDivElement | null>(null);
 
-  const commentsQuery = useQuery<CommentResponse[]>({
+  const commentsQuery = useQuery({
     queryKey: ["comments", postId],
     queryFn: () => fetchComments(postId),
     staleTime: 10_000,

@@ -69,6 +69,8 @@ export default function PrivacyPage() {
           <li>소셜 로그인 제공자(인증): 카카오, 구글, 네이버, 애플</li>
           <li>인프라/호스팅/배포(서비스 운영): Render, Vercel</li>
           <li>이미지/정적 파일 저장 및 전송(서비스 운영): Cloudflare</li>
+          <li>오류 모니터링(서비스 안정성 확보): Sentry</li>
+          <li>서버 로그 기록(서비스 운영 및 보안): Pino</li>
         </ul>
         <div className="mt-2 text-sm text-neutral-600">
           서비스는 수탁자와 위탁업무 내용, 기술적·관리적 보호조치 등을 포함한

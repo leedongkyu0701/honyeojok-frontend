@@ -1,7 +1,7 @@
 import { fetchClient } from "@/lib/fetchClient";
 import type { ProfileResponse } from "@/types/user";
 import type { TripRouteCardResponse } from "@/types/trip-routes";
-import type { PostCardResponse } from "@/types/community";
+import type { PostCardResponse } from "@/lib/schemas/community/response";
 import { parseApiError } from "@/lib/parseApiError";
 
 export async function fetchMeApi(): Promise<ProfileResponse> {

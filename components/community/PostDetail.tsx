@@ -6,7 +6,7 @@ import {
   incrementPostViewCount,
 } from "@/lib/api/community/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { PostDetailResponse } from "@/types/community";
+import type { PostDetailResponse } from "@/lib/schemas/community/response";
 import { useRouter } from "next/navigation";
 
 import { Card, CardContent } from "@/components/common/Card";

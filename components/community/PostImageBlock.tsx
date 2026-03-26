@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { PostImageBlockItem } from "@/types/community";
+import type { PostImageBlockItem } from "@/lib/schemas/community/response";
 
 export default function PostImageBlock({
   images,
