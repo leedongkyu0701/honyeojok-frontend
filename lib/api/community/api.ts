@@ -35,8 +35,9 @@ export async function fetchPosts(params: FindPostsParams = {}) {
   });
 
   await parseApiError(response);
-  const data = await response.json();
-  return postListSchema.parse(data);
+  const data = await response.json(); 
+  return postListSchema.parse(data); 
+  // 만약 여기서 에러 잡힐경우, 전역 쿼리 프로바이더에서 ZodError로 잡히게 됨.
 }
 
 export async function incrementPostViewCount(postId: number): Promise<void> {
