@@ -28,7 +28,7 @@ export const postCardSchema = z.object({
   likeCount: z.number(),
   viewCount: z.number(),
 
-  thumbnailUrl: z.string().optional(),
+  thumbnailUrl: z.string().nullish(),
 
   type: postTypeSchema,
 });
