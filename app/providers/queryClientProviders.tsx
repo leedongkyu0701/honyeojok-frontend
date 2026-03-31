@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { ApiError } from "@/lib/apiError";
 import { ErrorCode } from "@/types/error-code";
+import { ZodError } from "zod";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -80,6 +81,20 @@ function reportToSentry(error: unknown, source: "query" | "mutation") {
         code: error.code,
         requestId: error.requestId,
       },
+    });
+    return;
+  }
+
+  if (error instanceof ZodError) {
+    Sentry.withScope((scope) => {
+      scope.setTag("source", source);
+      scope.setTag("errorType", "ZodError");
+
+      scope.setContext("zod_issues", {
+        issues: error.issues,
+      });
+
+      Sentry.captureException(error);
     });
     return;
   }

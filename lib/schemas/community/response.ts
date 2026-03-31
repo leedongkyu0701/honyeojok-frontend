@@ -17,6 +17,9 @@ export const postCardSchema = z.object({
 
   region: z.string().nullish(),
   regionName: z.string().nullish(),
+//  optional = “없을 수 있음”
+//  nullable = “null일 수 있음”
+//  nullish = “둘 다 + 누락까지 다 허용” 
 
   createdAt: z.string(),
 
@@ -25,7 +28,7 @@ export const postCardSchema = z.object({
   likeCount: z.number(),
   viewCount: z.number(),
 
-  thumbnailUrl: z.string().nullish(),
+  thumbnailUrl: z.string().optional(),
 
   type: postTypeSchema,
 });
