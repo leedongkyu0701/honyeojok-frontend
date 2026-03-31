@@ -15,8 +15,8 @@ export const postCardSchema = z.object({
   id: z.number(),
   title: z.string(),
 
-  region: z.string().optional(),
-  regionName: z.string().optional(),
+  region: z.string().nullish(),
+  regionName: z.string().nullish(),
 
   createdAt: z.string(),
 
@@ -25,7 +25,7 @@ export const postCardSchema = z.object({
   likeCount: z.number(),
   viewCount: z.number(),
 
-  thumbnailUrl: z.string().optional(),
+  thumbnailUrl: z.string().nullish(),
 
   type: postTypeSchema,
 });
@@ -34,8 +34,8 @@ export const postDetailSchema = z.object({
   id: z.number(),
   title: z.string(),
 
-  region: z.string().optional(),
-  regionName: z.string().optional(),
+  region: z.string().nullish(),
+  regionName: z.string().nullish(),
 
   createdAt: z.string(),
 
@@ -45,7 +45,7 @@ export const postDetailSchema = z.object({
 
   type: postTypeSchema,
 
-  rating: z.number().optional(),
+  rating: z.number().nullish(),
 
   images: z.array(postImageBlockItemSchema),
 
