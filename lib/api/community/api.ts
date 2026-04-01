@@ -1,6 +1,5 @@
 import { fetchClient } from "@/lib/fetchClient";
 import { parseApiError } from "@/lib/parseApiError";
-import { ProvinceGroup } from "@/types/util";
 import {
   postCardSchema,
   postDetailSchema,
@@ -9,26 +8,29 @@ import {
   likePostResponseSchema,
   postListSchema,
   postCardListSchema,
-  type PostType,
 } from "@/lib/schemas/community/response";
+import { findPostsParamsSchema, 
+  type FindPostsParams
+ } from "@/lib/schemas/community/request";
 
 
-export type FindPostsParams = {
-  page?: number | null;
-  take?: number | null;
-  type?: PostType | null;
-  q?: string | null;
-  province?: ProvinceGroup | null;
-};
+// export type FindPostsParams = {
+//   page?: number | null;
+//   take?: number | null;
+//   type?: PostType | null;
+//   q?: string | null;
+//   province?: ProvinceGroup | null;
+// };
 
 export async function fetchPosts(params: FindPostsParams = {}) {
+  const parsedParams = findPostsParamsSchema.parse(params); // 유효성 검사 및 타입 추론
   const qs = new URLSearchParams();
 
-  if (params.page != null) qs.append("page", String(params.page));
-  if (params.take != null) qs.append("take", String(params.take));
-  if (params.type) qs.append("type", params.type);
-  if (params.q) qs.append("q", params.q);
-  if (params.province) qs.append("province", params.province);
+  if (parsedParams.page != null) qs.append("page", String(parsedParams.page));
+  if (parsedParams.take != null) qs.append("take", String(parsedParams.take));
+  if (parsedParams.type) qs.append("type", parsedParams.type);
+  if (parsedParams.q) qs.append("q", parsedParams.q);
+  if (parsedParams.province) qs.append("province", parsedParams.province);
   const response = await fetchClient(`/posts${qs.toString() ? `?${qs}` : ""}`, {
     skipAuth: true,
     withCredentials: false,
