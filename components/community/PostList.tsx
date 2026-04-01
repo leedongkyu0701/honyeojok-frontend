@@ -40,7 +40,7 @@ export default function PostList() {
         page,
         take: TAKE,
         type: postType,
-        q: q || null,
+        q: q || undefined,
         province,
       }),
     placeholderData: keepPreviousData,
