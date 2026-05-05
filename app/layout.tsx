@@ -3,7 +3,7 @@ import "./globals.css";
 
 import Navbar from "@/shared/layout/Navbar";
 import Footer from "@/shared/layout/Footer";
-import QCProvider from "./providers/QueryClientProviders";
+import QCProvider from "./providers/QueryClientProvider";
 import AuthProvider from "./providers/AuthProvider";
 import { Toaster } from "sonner";
 
