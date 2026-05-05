@@ -1,4 +1,4 @@
-import HotSpotView from "@/components/spot/HotSpotView";
+import HotSpotView from "@/features/spot/components/HotSpotView";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

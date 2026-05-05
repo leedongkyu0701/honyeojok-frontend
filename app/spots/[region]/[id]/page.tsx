@@ -1,8 +1,8 @@
-import SpotDetailPage from "@/components/spot/SpotDetail";
-import { fetchSpotDetail } from "@/lib/api/spot/api";
+import SpotDetailPage from "@/features/spot/components/SpotDetail";
+import { fetchSpotDetail } from "@/features/spot/api/spot.api";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ApiError } from "@/lib/apiError";
+import { ApiError } from "@/shared/api/apiError";
 
 export async function generateMetadata({
   params,

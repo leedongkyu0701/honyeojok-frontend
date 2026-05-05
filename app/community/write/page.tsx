@@ -1,4 +1,4 @@
-import WritePost from "@/components/community/WritePost";
+import WritePost from "@/features/community/components/WritePost";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

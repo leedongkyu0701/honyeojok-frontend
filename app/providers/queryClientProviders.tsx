@@ -9,8 +9,8 @@ import {
   MutationCache,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ApiError } from "@/lib/apiError";
-import { ErrorCode } from "@/types/error-code";
+import { ApiError } from "@/shared/api/apiError";
+import { ErrorCode } from "@/shared/types/error-code";
 import { ZodError } from "zod";
 
 const isProd = process.env.NODE_ENV === "production";

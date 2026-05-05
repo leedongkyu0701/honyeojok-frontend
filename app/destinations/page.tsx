@@ -1,4 +1,4 @@
-import DestinationsView from "@/components/destination/DestinationsView";
+import DestinationsView from "@/features/destination/components/DestinationsView";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

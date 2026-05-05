@@ -1,9 +1,9 @@
 "use client";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 import { ReactNode, useEffect } from "react";
-import { refreshToken } from "@/lib/api/auth/api";
-import { ApiError } from "@/lib/apiError";
-import { ErrorCode } from "@/types/error-code";
+import { refreshToken } from "@/features/auth/api/auth.api";
+import { ApiError } from "@/shared/api/apiError";
+import { ErrorCode } from "@/shared/types/error-code";
 
 export default function AuthProvider({
   children,

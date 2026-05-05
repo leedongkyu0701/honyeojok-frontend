@@ -1,4 +1,4 @@
-import RandomTrip from "@/components/Map/RandomTrip";
+import RandomTrip from "@/features/home/components/RandomTrip";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

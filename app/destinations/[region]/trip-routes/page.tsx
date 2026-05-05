@@ -1,5 +1,5 @@
-import TripRouteView from "@/components/trip-route/TripRouteView";
-import { fetchDestinationDetail } from "@/lib/api/destination/api";
+import TripRouteView from "@/features/trip-route/components/TripRouteView";
+import { fetchDestinationDetail } from "@/features/destination/api/destination.api";
 import type { Metadata } from "next";
 
 export async function generateMetadata({

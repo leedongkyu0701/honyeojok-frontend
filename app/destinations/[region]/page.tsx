@@ -1,8 +1,8 @@
-import RegionDetail from "@/components/region/RegionDetail";
-import { fetchDestinationDetail } from "@/lib/api/destination/api";
+import RegionDetail from "@/features/region/components/RegionDetail";
+import { fetchDestinationDetail } from "@/features/destination/api/destination.api";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ApiError } from "@/lib/apiError";
+import { ApiError } from "@/shared/api/apiError";
 
 export async function generateMetadata({
   params,

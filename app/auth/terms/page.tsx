@@ -1,5 +1,5 @@
-import LegalLayout from "@/components/auth/LegalLayout";
-import LegalSection from "@/components/auth/LegalSection";
+import LegalLayout from "@/features/auth/components/LegalLayout";
+import LegalSection from "@/features/auth/components/LegalSection";
 
 export const metadata = {
   title: "이용약관",

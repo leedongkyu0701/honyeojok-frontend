@@ -1,8 +1,8 @@
-import TripRouteDetail from "@/components/trip-route/TripRouteDetail";
-import { fetchTripRouteDetail } from "@/lib/api/trip-route/api";
+import TripRouteDetail from "@/features/trip-route/components/TripRouteDetail";
+import { fetchTripRouteDetail } from "@/features/trip-route/api/trip-route.api";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ApiError } from "@/lib/apiError";
+import { ApiError } from "@/shared/api/apiError";
 
 
 export async function generateMetadata({
