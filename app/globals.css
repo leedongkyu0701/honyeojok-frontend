@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
-
 
   font-family:
     -apple-system,
@@ -13,11 +20,6 @@ body {
     Roboto,
     system-ui,
     sans-serif;
-
-  color: rgb(23 23 23);
-  background-color: white;
-
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* -webkit-font-smoothing: antialiased; tailwind 의 antialiased 로 대체
+  -moz-osx-font-smoothing: grayscale; */
 }

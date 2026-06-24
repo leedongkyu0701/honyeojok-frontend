@@ -184,7 +184,7 @@ function handleMutationError(error: unknown) {
 }
 
 export default function QCProvider({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(
+  const [queryClient] = useState( // 컴포넌트 마운트 시 한 번만 생성
     () =>
       new QueryClient({
         queryCache: new QueryCache({
@@ -196,7 +196,7 @@ export default function QCProvider({ children }: { children: ReactNode }) {
             const meta = mutation.options.meta as
               | { silent?: boolean }
               | undefined;
-            if (meta?.silent) return;
+            if (meta?.silent) return; // 조용히 실패 처리할경우 ex) 폼 검증 에러를 페이지 내부에서 처리할 때, 로그아웃 시도할 때 등
             handleMutationError(error);
           },
         }),

@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/shared/ui/Card";
 import Button from "@/shared/ui/Button";
 
 import { searchDestinations } from "@/features/destination/api/destination.api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import ImageUploader, {
   type FileWithPreview,
@@ -40,6 +40,7 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export default function WritePost() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [images, setImages] = useState<FileWithPreview[]>([]);
   const [regionQuery, setRegionQuery] = useState("");
@@ -134,7 +135,9 @@ export default function WritePost() {
     mutationFn: (formData: FormData) => createPost(formData),
     meta: { silent: true },
     onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
       router.push(`/community/${res.id}`);
+
     },
     onError: (err) => {
       if (err instanceof ApiError) {

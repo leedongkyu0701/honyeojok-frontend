@@ -4,18 +4,20 @@ import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { useEffect } from "react";
 
-export default function GlobalError({
+export default function ErrorPage({
   error,
   reset,
 }: {
-  error: Error;
+  error: Error & { digest?: string }; // digest는 Sentry에서 오류를 그룹화하는 데 사용되는 고유 식별자입니다.
   reset: () => void;
 }) {
-
   useEffect(() => {
-    Sentry.captureException(error,{
+    Sentry.captureException(error, {
       tags: {
-        source: "global-error",
+        source: "app-error",
+      },
+      extra: {
+        digest: error.digest,
       },
     });
   }, [error]);

@@ -42,7 +42,7 @@ export async function fetchClient(
   endpoint: string,
   options: FetchClientOptions = { withCredentials: true },
 ): Promise<Response> {
-  const { accessToken, logout, setAccessToken } = useAuthStore.getState();
+  const { accessToken, logout, setAccessToken } = useAuthStore.getState(); // 구독하지 않고 현재 상태만 가져오기
   const withCredentials = options.withCredentials ?? true;
 
   const isFormData = options.body instanceof FormData;
@@ -66,7 +66,7 @@ export async function fetchClient(
 
   const res = await doFetch(options.skipAuth ? undefined : accessToken);
 
-  if (res.status !== 401 || options.skipAuth) return res; // 인증 상태 제외는 바로 반환
+  if (res.status !== 401 || options.skipAuth) return res; // 401이 아닐때랑 skipAuth 옵션이 켜졌을 때는 토큰 재발급 시도하지 않고 바로 반환
 
   let shouldRefresh = true;
   try {
