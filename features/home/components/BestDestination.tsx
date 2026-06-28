@@ -36,7 +36,7 @@ export default function WeeklyPickCard() {
           src={src}
           alt={data.name}
           fill
-          priority
+          preload
           className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           sizes="(max-width: 1024px) 100vw, 80vw"
         />

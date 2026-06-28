@@ -30,13 +30,16 @@ export default function Button({
   className,
   variant = "primary",
   size = "md",
+  type = "button",
   ...props
 }: ComponentPropsWithoutRef<"button"> & {
   variant?: Variant;
   size?: Size;
+  type?: "button" | "submit" | "reset";
 }) {
   return (
     <button
+      type={type}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-full font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60",
         variantClasses[variant],

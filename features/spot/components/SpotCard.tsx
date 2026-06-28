@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import type { SpotCardResponse } from "@/features/spot/types/spots";
@@ -22,7 +20,7 @@ export default function SpotCard({
   if (variant === "list") {
     return (
       <Link href={href} className="group block">
-        <Card className="overflow-hidden rounded-2xl transition duration-300 group-hover:shadow-md">
+        <Card className="overflow-hidden transition duration-300 group-hover:shadow-md">
           <div className="flex gap-3 p-3">
             <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
               <Image
@@ -65,7 +63,7 @@ export default function SpotCard({
     return (
       <Link href={href} className="group block">
         <Card className="overflow-hidden rounded-2xl transition duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
-          <div className="relative aspect-[16/9] bg-neutral-100">
+          <div className="relative aspect-video bg-neutral-100">
             <Image
               src={imageSrc}
               alt={spot.name}
@@ -101,8 +99,8 @@ export default function SpotCard({
     );
   }
 
-  // - 폭은 부모(HorizontalRail itemClassName)가 결정 그래서 여기서는 항상 w-full로 "부모 폭을 꽉 채우는 카드"로 둔다
-  // - 모바일(2장 보일 때) 대비: p, 글자, 태그를 sm에서 살짝 풀어주는 식으로 밀도 조절
+  // - 폭은 부모(HorizontalRail itemClassName)가 결정 그래서 여기서는 "부모 폭을 꽉 채우는 카드"로 둔다
+  
   return (
     <Link href={href} className="group block">
       <Card className="overflow-hidden rounded-2xl transition duration-300 group-hover:-translate-y-1 group-hover:shadow-md">

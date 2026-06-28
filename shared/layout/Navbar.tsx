@@ -18,9 +18,12 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-neutral-200 bg-white/80 backdrop-blur">
       <Container className="flex h-14 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 p-1">
-          <Image src="/logo.svg" alt="HonYeo" width={50} height={50} priority />
-          <span className="sr-only">혼자여행</span>
+        <Link
+          href="/"
+          aria-label="혼여족 홈으로 이동"
+          className="flex items-center gap-2 p-1"
+        >
+          <Image src="/logo.svg" alt="" width={50} height={50} priority />
         </Link>
 
         <div className="flex items-center gap-1">

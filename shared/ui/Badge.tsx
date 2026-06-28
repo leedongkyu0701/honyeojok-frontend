@@ -3,7 +3,7 @@ import { cn } from "@/shared/lib/utils";
 
 type Variant = "default" | "glass";
 
-type Props = {
+type BadgeProps = {
   children: ReactNode;
   variant?: Variant;
   className?: string;
@@ -13,7 +13,7 @@ export default function Badge({
   children,
   variant = "default",
   className,
-}: Props) {
+}: BadgeProps) {
   return (
     <span
       className={cn(
