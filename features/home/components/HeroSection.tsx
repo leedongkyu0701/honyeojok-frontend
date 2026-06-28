@@ -9,7 +9,7 @@ export default function HeroSection() {
     <section className="relative overflow-hidden bg-white py-20">
       <Container className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div>
-          <p className=" pl-[0.3em] text-sm uppercase tracking-[0.08em] text-neutral-500">
+          <p className="pl-[0.3em] text-sm tracking-[0.08em] text-neutral-500">
               혼자 어디론가 떠나고 싶을 때,
           </p>
 

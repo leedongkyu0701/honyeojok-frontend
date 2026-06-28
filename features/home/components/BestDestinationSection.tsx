@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { DestinationCardResponse } from "@/features/destination/types/destinations";
 import { fetchRecommendedDestinations } from "@/features/destination/api/destination.api";
 
 import Link from "next/link";
@@ -15,7 +14,8 @@ import HorizontalRail from "@/shared/ui/HorizontalRail";
 import MainDestinationCard from "@/features/destination/components/DestinationMainCard";
 
 export default function BestDestinationSection() {
-  const { data, isLoading, isError } = useQuery<DestinationCardResponse[]>({
+  const { data, isLoading, isError } = useQuery({
+    // useQuery의 반환 값은 자동으로 타입 추론이 되므로, data 타입을 명시적으로 지정 안하는게 실무적이라고 한다.
     queryKey: ["destinations", "recommended"],
     queryFn: fetchRecommendedDestinations,
   });
@@ -43,17 +43,27 @@ export default function BestDestinationSection() {
           </HorizontalRail>
         ) : null}
 
-        {isError || data?.length === 0 ? (
+        {isError ? (
           <EmptyState
             title="추천 여행지를 불러오지 못했어요."
             description="잠시 후 다시 시도해주세요."
           />
         ) : null}
 
+        {!isLoading && !isError && data?.length === 0 ? (
+          <EmptyState
+            title="아직 추천 여행지가 없어요."
+            description="곧 새로운 여행지를 추천해드릴게요."
+          />
+        ) : null}
+
         {!isLoading && !isError && data && data.length > 0 ? (
           <HorizontalRail itemClassName="w-[85%] sm:w-[48.5%] lg:w-[32%]">
             {data.map((destination) => (
-              <MainDestinationCard key={destination.id} destination={destination} />
+              <MainDestinationCard
+                key={destination.id}
+                destination={destination}
+              />
             ))}
           </HorizontalRail>
         ) : null}

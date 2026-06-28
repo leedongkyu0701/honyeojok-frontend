@@ -34,8 +34,8 @@ async function runRefresh(): Promise<string> {
 }
 
 export type FetchClientOptions = RequestInit & {
-  skipAuth?: boolean;
-  withCredentials?: boolean;
+  skipAuth?: boolean; // Authorization 헤더를 붙이지 않고 요청할지 여부 (로그인 안 된 상태에서 호출 가능한 API 요청에 사용)
+  withCredentials?: boolean; // 공개 API요청시에는 쿠키를 보내지 않도록 설정 (기본값: true)
 };
 
 export async function fetchClient(
@@ -66,7 +66,8 @@ export async function fetchClient(
 
   const res = await doFetch(options.skipAuth ? undefined : accessToken);
 
-  if (res.status !== 401 || options.skipAuth) return res; // 401이 아닐때랑 skipAuth 옵션이 켜졌을 때는 토큰 재발급 시도하지 않고 바로 반환
+  if (res.status !== 401 || options.skipAuth) return res; 
+  // 401이 아닐때랑 skipAuth 옵션이 켜졌을 때는 토큰 재발급 시도하지 않고 바로 반환
 
   let shouldRefresh = true;
   try {

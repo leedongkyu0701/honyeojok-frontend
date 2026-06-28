@@ -109,6 +109,7 @@ export default function HorizontalRail({
           "flex flex-1 gap-4 overflow-x-auto scroll-smooth",
           "snap-x snap-proximity",
           "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          // 보통 브라우저 별로 스크롤바가 다르게 표시되는데, 이걸 통일시키기 위해 위와 같이 작성함(모든 브라우저에서 스크롤바를 숨김)
         )}
       >
         {items.map((item, i) => (
