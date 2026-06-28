@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import QCProvider from "./providers/queryClientProviders";
-import AuthProvider from "./providers/authProvider";
+import Navbar from "@/shared/layout/Navbar";
+import Footer from "@/shared/layout/Footer";
+import QCProvider from "./providers/QueryClientProvider";
+import AuthProvider from "./providers/AuthProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {

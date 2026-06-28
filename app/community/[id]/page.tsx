@@ -1,10 +1,10 @@
-import PostDetail from "@/components/community/PostDetail";
-import Container from "@/components/common/Container";
-import EmptyState from "@/components/common/EmptyState";
+import PostDetail from "@/features/community/components/PostDetail";
+import Container from "@/shared/ui/Container";
+import EmptyState from "@/shared/ui/EmptyState";
 import type { Metadata } from "next";
-import { fetchPostDetail } from "@/lib/api/community/api";
+import { fetchPostDetail } from "@/features/community/api/community.api";
 import { notFound } from "next/navigation";
-import { ApiError } from "@/lib/apiError";
+import { ApiError } from "@/shared/api/apiError";
 
 export async function generateMetadata({
   params,

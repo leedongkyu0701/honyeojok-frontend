@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/auth.store";
-import { ErrorCode } from "@/types/error-code";
-import { ApiError } from "@/lib/apiError";
-import { parseApiError } from "@/lib/parseApiError";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { ErrorCode } from "@/shared/types/error-code";
+import { ApiError } from "@/shared/api/apiError";
+import { parseApiError } from "@/shared/api/parseApiError";
 import { toast } from "sonner";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL;

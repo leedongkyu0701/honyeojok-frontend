@@ -1,7 +1,7 @@
-import PostList from "@/components/community/PostList";
-import CommunityHeader from "@/components/community/CommunityHeader";
-import CommunityFilters from "@/components/community/CommunityFilters";
-import Container from "@/components/common/Container";
+import PostList from "@/features/community/components/PostList";
+import CommunityHeader from "@/features/community/components/CommunityHeader";
+import CommunityFilters from "@/features/community/components/CommunityFilters";
+import Container from "@/shared/ui/Container";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

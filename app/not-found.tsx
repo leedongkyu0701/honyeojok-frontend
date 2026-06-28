@@ -30,7 +30,7 @@ export default function NotFound() {
       </div>
 
       <p className="text-xs text-neutral-500">
-        문제가 계속되면 새로고침 후 다시 시도해주세요.
+        입력한 주소를 다시 확인하거나, 다른 여행 정보를 둘러보세요.
       </p>
     </div>
   );
