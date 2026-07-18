@@ -20,13 +20,18 @@ export async function generateMetadata({
 
     const post = await fetchPostDetail(postId);
     const title = `${post.title}`;
-    const description = `${post.content.slice(0, 100)}...`;
+    const normalizedContent = post.content.replace(/\s+/g, " ").trim();
+    const description = normalizedContent
+      ? normalizedContent.length > 120
+        ? `${normalizedContent.slice(0, 120)}...`
+        : normalizedContent
+      : "혼여족 커뮤니티 게시글";
 
     return {
       title,
       description,
       alternates: {
-        canonical: `/community/${postId}`,
+        canonical: `/community/${post.id}`,
       },
       openGraph: {
         title,

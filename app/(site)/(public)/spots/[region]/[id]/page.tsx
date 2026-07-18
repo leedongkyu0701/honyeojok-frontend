@@ -24,12 +24,12 @@ export async function generateMetadata({
       title,
       description,
       alternates: {
-        canonical: `/spots/${spot.destination.slug}/${id}`,
+        canonical: `/spots/${spot.destination.slug}/${spot.id}`,
       },
       openGraph: {
         title: title,
         description,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL}/spots/${spot.destination.slug}/${id}`,
+        url: `/spots/${spot.destination.slug}/${spot.id}`,
         images: [
           {
             url: spot.imageUrl || "/og.png",

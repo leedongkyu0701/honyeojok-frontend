@@ -22,7 +22,7 @@ export async function generateMetadata({
     title,
     description,
     alternates: {
-      canonical: `/destinations/${region}/trip-routes/${slug}`,
+      canonical: `/destinations/${region}/trip-routes/${tripRoute.slug}`,
     },
     openGraph: {
       title,

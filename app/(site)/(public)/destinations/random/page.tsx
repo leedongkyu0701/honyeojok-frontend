@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "랜덤 여행지",
-  description: "혼여족을 위한 랜덤 여행지 뽑기 서비스",
+  description: "다음 혼자 여행을 위한 국내 여행지를 랜덤으로 찾아보세요.",
+  alternates: {
+    canonical: "/destinations/random",
+  },
 };
 
 export default function RandomPage() {

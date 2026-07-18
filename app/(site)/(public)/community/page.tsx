@@ -6,7 +6,10 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "커뮤니티",
-  description: "혼여족을 위한 여행 정보 커뮤니티",
+  description: "혼자 여행한 후기와 질문, 여행 정보를 함께 나누는 커뮤니티입니다.",
+  alternates: {
+    canonical: "/community",
+  },
 };
 
 export default function CommunityPage() {

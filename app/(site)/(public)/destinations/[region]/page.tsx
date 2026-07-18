@@ -20,7 +20,7 @@ export async function generateMetadata({
       destination.description ??
       `혼여족을 위한 ${destination.name} 여행 지역 정보와 추천 여행 루트`,
     alternates: {
-      canonical: `/destinations/${region}`,
+      canonical: `/destinations/${destination.slug}`,
     },
     openGraph: {
       title: `${destination.name} 여행 정보`,
