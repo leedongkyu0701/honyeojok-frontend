@@ -10,9 +10,8 @@ import Skeleton from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
 import Button from "@/shared/ui/Button";
 
-import { fetchBestPosts } from "@/features/community/api/community.api";
-import type { PostCardResponse } from "@/features/community/schemas/response";
-import PostCard from "@/features/community/components/PostCard";
+import PostCard from "@/features/community/components/common/PostCard";
+import { bestPostsQueryOptions } from "@/features/community/queries/post.queries";
 
 const GRID_CLASS = "grid grid-cols-1 gap-4 sm:grid-cols-3";
 const SKELETON_COUNT = 3;
@@ -22,10 +21,7 @@ export default function BestReviewSection() {
     data: posts = [],
     isLoading,
     isError,
-  } = useQuery<PostCardResponse[]>({
-    queryKey: ["posts", "best"],
-    queryFn: fetchBestPosts,
-  });
+  } = useQuery(bestPostsQueryOptions());
 
   let content: ReactNode;
 

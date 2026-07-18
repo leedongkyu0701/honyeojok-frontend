@@ -4,10 +4,12 @@ export default function Pagination({
   page,
   totalPages,
   onPageChange,
+  disabled = false,
 }: {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  disabled?: boolean;
 }) {
   const canPrev = page > 1;
   const canNext = page < totalPages;
@@ -19,7 +21,7 @@ export default function Pagination({
         size="sm"
         aria-label="이전 페이지"
         onClick={() => onPageChange(page - 1)}
-        disabled={!canPrev}
+        disabled={disabled || !canPrev}
       >
         이전
       </Button >
@@ -31,7 +33,7 @@ export default function Pagination({
         size="sm"
         aria-label="다음 페이지"
         onClick={() => onPageChange(page + 1)}
-        disabled={!canNext}
+        disabled={disabled || !canNext}
       >
         다음
       </Button>

@@ -1,8 +1,8 @@
-import PostDetail from "@/features/community/components/PostDetail";
+import PostDetail from "@/features/community/components/detail/PostDetail";
 import Container from "@/shared/ui/Container";
 import EmptyState from "@/shared/ui/EmptyState";
 import type { Metadata } from "next";
-import { fetchPostDetail } from "@/features/community/api/community.api";
+import { fetchPostDetail } from "@/features/community/api/post.api";
 import { notFound } from "next/navigation";
 import { ApiError } from "@/shared/api/apiError";
 
@@ -54,6 +54,10 @@ export default async function PostDetailPage({
 }) {
   const { id } = await params;
   const postId = parseInt(id, 10);
+  if (!Number.isInteger(postId) || postId <= 0) {
+    notFound();
+  }
+
   return (
     <div className="py-10">
       <Container className="grid gap-8 lg:grid-cols-[2fr_1fr]">

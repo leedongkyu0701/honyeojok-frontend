@@ -1,6 +1,6 @@
-import PostList from "@/features/community/components/PostList";
-import CommunityHeader from "@/features/community/components/CommunityHeader";
-import CommunityFilters from "@/features/community/components/CommunityFilters";
+import CommunityFilters from "@/features/community/components/list/CommunityFilters";
+import CommunityHeader from "@/features/community/components/list/CommunityHeader";
+import PostList from "@/features/community/components/list/PostList";
 import Container from "@/shared/ui/Container";
 import type { Metadata } from "next";
 

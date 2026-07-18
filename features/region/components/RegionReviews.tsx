@@ -5,10 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import EmptyState from "@/shared/ui/EmptyState";
 import Skeleton from "@/shared/ui/Skeleton";
-import PostCard from "@/features/community/components/PostCard";
-
-import type { PostCardResponse } from "@/features/community/schemas/response";
-import { fetchPostsByRegionSlug } from "@/features/community/api/community.api";
+import PostCard from "@/features/community/components/common/PostCard";
+import { regionPostsQueryOptions } from "@/features/community/queries/post.queries";
 import Button from "@/shared/ui/Button";
 
 export default function RegionReviews({ regionSlug }: { regionSlug: string }) {
@@ -16,10 +14,7 @@ export default function RegionReviews({ regionSlug }: { regionSlug: string }) {
     data: posts,
     isLoading,
     isError,
-  } = useQuery<PostCardResponse[]>({
-    queryKey: ["posts", "region", regionSlug],
-    queryFn: () => fetchPostsByRegionSlug(regionSlug),
-  });
+  } = useQuery(regionPostsQueryOptions(regionSlug));
 
   if (isLoading) {
     return (

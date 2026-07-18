@@ -146,7 +146,7 @@ export default function TripRouteDetail({
     return [...days]
       .sort((a, b) => a.dayNumber - b.dayNumber)
       .map((d) => ({
-        ...d,
+        ...d, 
         items: [...(d.items ?? [])].sort((a, b) => a.order - b.order),
       }));
   }, [route]);
