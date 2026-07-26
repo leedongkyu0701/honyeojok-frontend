@@ -4,10 +4,11 @@ import SocialButton from "./SocialButton";
 import { useEffect} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/shared/api/config";
 
-const KAKAO_AUTH_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/kakao`;
-const GOOGLE_AUTH_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/google`;
-const NAVER_AUTH_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/naver`;
+const KAKAO_AUTH_URL = `${API_BASE_URL}/auth/kakao`;
+const GOOGLE_AUTH_URL = `${API_BASE_URL}/auth/google`;
+const NAVER_AUTH_URL = `${API_BASE_URL}/auth/naver`;
 
 export default function LoginPage() {
   const router = useRouter();

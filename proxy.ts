@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-export function proxy(_: NextRequest) {
+export function proxy() {
   const res = NextResponse.next();
 
   if (process.env.VERCEL_ENV !== "production") {

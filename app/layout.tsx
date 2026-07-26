@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import Navbar from "@/shared/layout/Navbar";
-import Footer from "@/shared/layout/Footer";
-import QCProvider from "./providers/QueryClientProvider";
-import AuthProvider from "./providers/AuthProvider";
+import QCProvider from "./_providers/QueryClientProvider";
+import AuthProvider from "./_providers/AuthProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
@@ -55,9 +53,7 @@ export default function RootLayout({
             }}
           />
           <AuthProvider>
-            <Navbar />
-            <main>{children}</main>
-            <Footer />
+            {children}
           </AuthProvider>
         </QCProvider>
       </body>

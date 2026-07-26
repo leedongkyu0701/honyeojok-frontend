@@ -1,99 +1,83 @@
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { parseApiError } from "./parseApiError";
-import { ApiError } from "./apiError";
 import { ErrorCode } from "@/shared/types/error-code";
+import { refreshAccessToken } from "./refreshAccessToken";
+import { API_BASE_URL } from "./config";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5001";
+export const publicRequestOptions = {
+  skipAuth: true,
+  withCredentials: false,
+} as const;
 
-let refreshPromise: Promise<string> | null = null;
-
-async function runRefresh(): Promise<string> {
-  if (refreshPromise) {
-    return refreshPromise;
-  }
-  refreshPromise = (async () => {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
-      method: "POST",
-      credentials: "include",
-    });
-    await parseApiError(res);
-    const data = await res.json();
-    if (!data?.accessToken) {
-      throw new ApiError(500, "No access token in refresh response");
-    }
-    return data.accessToken as string;
-  })();
-
-  try {
-    const newToken = await refreshPromise;
-    return newToken;
-  } finally {
-    refreshPromise = null;
-  }
-}
-
-export type FetchClientOptions = RequestInit & {
-  skipAuth?: boolean; // Authorization 헤더를 붙이지 않고 요청할지 여부 (로그인 안 된 상태에서 호출 가능한 API 요청에 사용)
-  withCredentials?: boolean; // 공개 API요청시에는 쿠키를 보내지 않도록 설정 (기본값: true)
+export type FetchClientOptions = Omit<RequestInit, "credentials"> & {
+  skipAuth?: boolean;
+  withCredentials?: boolean;
 };
+
+async function shouldRefresh(response: Response): Promise<boolean> {
+  try {
+    await parseApiError(response.clone());
+  } catch (error) {
+    return (
+      error instanceof Error &&
+      "code" in error &&
+      (error.code === ErrorCode.AUTH_TOKEN_EXPIRED ||
+        error.code === ErrorCode.AUTH_INVALID_TOKEN)
+    );
+  }
+
+  return false;
+}
 
 export async function fetchClient(
   endpoint: string,
-  options: FetchClientOptions = { withCredentials: true },
+  options: FetchClientOptions = {},
 ): Promise<Response> {
-  const { accessToken, logout, setAccessToken } = useAuthStore.getState(); // 구독하지 않고 현재 상태만 가져오기
-  const withCredentials = options.withCredentials ?? true;
+  const {
+    skipAuth = false,
+    withCredentials = true,
+    headers: requestHeaders,
+    ...requestOptions
+  } = options;
+  const { accessToken, logout, setAccessToken } = useAuthStore.getState();
 
-  const isFormData = options.body instanceof FormData;
+  const isFormData = requestOptions.body instanceof FormData;
 
   const doFetch = (token?: string | null) => {
-    const headers = new Headers(options.headers || {});
+    const headers = new Headers(requestHeaders);
     if (isFormData) {
       headers.delete("Content-Type");
       headers.delete("content-type");
     }
-    if (token) {
+    if (skipAuth || !token) {
+      headers.delete("Authorization");
+      headers.delete("authorization");
+    } else {
       headers.set("Authorization", `Bearer ${token}`);
     }
 
     return fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
+      ...requestOptions,
       headers,
       credentials: withCredentials ? "include" : "omit",
     });
   };
 
-  const res = await doFetch(options.skipAuth ? undefined : accessToken);
+  const res = await doFetch(skipAuth ? undefined : accessToken);
 
-  if (res.status !== 401 || options.skipAuth) return res; 
-  // 401이 아닐때랑 skipAuth 옵션이 켜졌을 때는 토큰 재발급 시도하지 않고 바로 반환
+  if (res.status !== 401 || skipAuth) return res;
 
-  let shouldRefresh = true;
-  try {
-    const body = await res.clone().json();
-    const code = body?.code;
-    if (
-      code === ErrorCode.AUTH_UNAUTHORIZED ||
-      code === ErrorCode.AUTH_FORBIDDEN
-    ) {
-      shouldRefresh = false;
-    }
-  } catch {
-    // ignore
-  }
-
-  if (!shouldRefresh) {
+  if (!(await shouldRefresh(res))) {
     logout();
     return res;
   }
 
   try {
-    const newToken = await runRefresh();
-    setAccessToken(newToken);
-    return await doFetch(newToken);
-  } catch (e) {
+    const { accessToken: newAccessToken } = await refreshAccessToken();
+    setAccessToken(newAccessToken);
+    return doFetch(newAccessToken);
+  } catch (error) {
     logout();
-    throw e;
+    throw error;
   }
 }

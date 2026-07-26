@@ -2,26 +2,17 @@
 
 import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { CategoryType } from "@/features/community/schemas/response";
+import type { CategoryType } from "@/features/community/schemas/post.schema";
+import { categoryTypeSchema } from "@/features/community/schemas/post.schema";
+import { provinceGroupSchema } from "@/shared/schemas/province";
 import { ProvinceGroup } from "@/shared/types/util";
 
 export type CommunityFilterState = {
-  type: CategoryType; // "ALL" | "REVIEW" | "FREE" | "QUESTION"
+  type: CategoryType;
   q: string;
   page: number;
   province: ProvinceGroup | null;
 };
-
-function isProvinceGroup(v: string | null): v is ProvinceGroup {
-  return (
-    v === "SEOUL_GYEONGGI" ||
-    v === "GANGWON" ||
-    v === "CHUNGCHEONG" ||
-    v === "JEOLLA" ||
-    v === "GYEONGSANG" ||
-    v === "JEJU"
-  );
-}
 
 export function useCommunityFilters() {
   const router = useRouter();
@@ -29,17 +20,18 @@ export function useCommunityFilters() {
 
   const state: CommunityFilterState = useMemo(() => {
     const typeRaw = searchParams.get("type");
-    const type: CategoryType =
-      typeRaw === "REVIEW" || typeRaw === "FREE" || typeRaw === "QUESTION"
-        ? typeRaw
-        : "ALL";
+    const categoryResult = categoryTypeSchema.safeParse(typeRaw);
+    const type: CategoryType = categoryResult.success
+      ? categoryResult.data
+      : "ALL";
     const q = searchParams.get("q") ?? "";
 
-    const pageRaw = Number(searchParams.get("page") ?? "1");
-    const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+    const pageRaw = Number(searchParams.get("page"));
+    const page = Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
     const provinceParam = searchParams.get("province");
-    const rawProvince = isProvinceGroup(provinceParam) ? provinceParam : null;
+    const provinceResult = provinceGroupSchema.safeParse(provinceParam);
+    const rawProvince = provinceResult.success ? provinceResult.data : null;
 
     const province = type === "REVIEW" ? rawProvince : null;
 
@@ -71,7 +63,10 @@ export function useCommunityFilters() {
         else params.set("province", next.province);
       }
 
-      router.push(`/community?${params.toString()}`, { scroll: false });
+      const query = params.toString();
+      router.push(query ? `/community?${query}` : "/community", {
+        scroll: false,
+      });
     },
     [router, searchParams],
   );

@@ -1,16 +1,16 @@
 {
-  "name": "honyu-front",
+  "name": "honyeojok-frontend",
   "version": "0.1.0",
   "private": true,
   "engines": {
-  "node": ">=20"
-},
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit "
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

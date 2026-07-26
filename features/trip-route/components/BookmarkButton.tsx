@@ -87,12 +87,15 @@ export default function BookmarkButton({
 
   return (
     <button
+      type="button"
       onClick={handleClick}
+      aria-pressed={bookmarkedByMeCached}
+      aria-label={`여행 루트 ${bookmarkedByMeCached ? "저장 취소" : "저장"}`}
       className={cn(
         "inline-flex items-center gap-1 rounded-full border px-3 py-1 transition",
         bookmarkedByMeCached
           ? "border-yellow-400 bg-yellow-50 text-yellow-600"
-          : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral      -400 hover:bg-neutral-50",
+          : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50",
       )}
     >
       <Bookmark

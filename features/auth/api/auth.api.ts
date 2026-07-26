@@ -1,25 +1,20 @@
 import { fetchClient } from "@/shared/api/fetchClient";
 import { parseApiError } from "@/shared/api/parseApiError";
+import {
+  refreshAccessToken,
+  type RefreshTokenResponse,
+} from "@/shared/api/refreshAccessToken";
 
-export async function logout() {
-    await fetchClient(`/auth/logout`, {
-        method: "POST"
-    });
-    return;
+export async function logout(): Promise<void> {
+  const response = await fetchClient("/auth/logout", { method: "POST" });
+  await parseApiError(response);
 }
 
-
-export async function refreshToken() {
-    const response = await fetchClient(`/auth/refresh-token`, {
-        method: "POST", skipAuth: true
-    });
-    await parseApiError(response);
-    return response.json();
+export function refreshToken(): Promise<RefreshTokenResponse> {
+  return refreshAccessToken();
 }
 
-export async function withdraw() {
-    await fetchClient(`/auth/withdraw`, {
-        method: "POST"
-    });
-    return;
+export async function withdraw(): Promise<void> {
+  const response = await fetchClient("/auth/withdraw", { method: "POST" });
+  await parseApiError(response);
 }

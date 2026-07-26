@@ -9,6 +9,8 @@ type StarRatingProps = {
   onChange: (value: number) => void;
   max?: number;
   disabled?: boolean;
+  labelledBy?: string;
+  describedBy?: string;
 };
 
 export default function StarRating({
@@ -16,16 +18,25 @@ export default function StarRating({
   onChange,
   max = 5,
   disabled = false,
+  labelledBy,
+  describedBy,
 }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null);
   const displayValue = hoverValue ?? value;
 
   return (
-    <div className="flex items-center gap-1">
+    <div
+      role="radiogroup"
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
+      className="flex items-center gap-1"
+    >
       {Array.from({ length: max }, (_, i) => i + 1).map((star) => (
         <button
           key={star}
           type="button"
+          role="radio"
+          aria-checked={star === value}
           disabled={disabled}
           onMouseEnter={() => setHoverValue(star)}
           onMouseLeave={() => setHoverValue(null)}

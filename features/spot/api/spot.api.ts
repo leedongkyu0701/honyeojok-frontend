@@ -4,7 +4,10 @@ import type {
   FindHotSpotsResponse,
   SpotCategory,
 } from "@/features/spot/types/spots";
-import { fetchClient } from "@/shared/api/fetchClient";
+import {
+  fetchClient,
+  publicRequestOptions,
+} from "@/shared/api/fetchClient";
 import { parseApiError } from "@/shared/api/parseApiError";
 
 export type SpotListResponse<T> = {
@@ -14,28 +17,22 @@ export type SpotListResponse<T> = {
 
 
 export async function fetchSpotDetail(id: number): Promise<SpotDetailResponse> {
-  const response = await fetchClient(`/spots/${id}`, {
-    skipAuth: true,
-    withCredentials: false,
-  });
+  const response = await fetchClient(`/spots/${id}`, publicRequestOptions);
   await parseApiError(response);
   return response.json();
 }
 
 export async function fetchHotSpots(): Promise<FindHotSpotsResponse> {
-  const response = await fetchClient(`/spots/hot`, {
-    skipAuth: true,
-    withCredentials: false,
-  });
+  const response = await fetchClient("/spots/hot", publicRequestOptions);
   await parseApiError(response);
   return response.json();
 }
 
 export async function fetchRecommendedSpots(): Promise<SpotCardResponse[]> {
-  const response = await fetchClient(`/spots/recommended`, {
-    skipAuth: true,
-    withCredentials: false,
-  });
+  const response = await fetchClient(
+    "/spots/recommended",
+    publicRequestOptions,
+  );
   await parseApiError(response);
   return response.json();
 }
@@ -59,7 +56,7 @@ export async function fetchSpotsByRegion(
 
   const response = await fetchClient(
     `/spots/region/${encodeURIComponent(region)}${qs ? `?${qs}` : ""}`,
-    { skipAuth: true, withCredentials: false },
+    publicRequestOptions,
   );
 
   await parseApiError(response);

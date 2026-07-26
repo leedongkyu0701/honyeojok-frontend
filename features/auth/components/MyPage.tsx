@@ -19,12 +19,12 @@ import { Card } from "@/shared/ui/Card";
 import Badge from "@/shared/ui/Badge";
 import { toast } from "sonner";
 
-import PostCard from "@/features/community/components/PostCard";
+import PostCard from "@/features/community/components/common/PostCard";
 import RouteCard from "@/features/trip-route/components/RouteCard";
 
 import type { ProfileResponse } from "@/features/auth/types/auth";
 import type { TripRouteCardResponse } from "@/features/trip-route/types/trip-routes";
-import type { PostCardResponse } from "@/features/community/schemas/response";
+import type { PostCardResponse } from "@/features/community/schemas/post.schema";
 import {
   fetchMeApi,
   updateNickname,
@@ -102,6 +102,7 @@ export default function MyPage() {
 
   const logoutMutation = useMutation({
     mutationFn: logoutServer,
+    meta: { silent: true },
     onSettled: () => {
       logout();
       queryClient.clear();

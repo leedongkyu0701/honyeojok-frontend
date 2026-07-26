@@ -2,7 +2,10 @@ import type { DestinationCardResponse } from "@/features/destination/types/desti
 import type { DestinationDetailResponse } from "@/features/destination/types/destinations";
 import type { DestinationMapResponse } from "@/features/destination/types/destinations";
 import type { DestinationSearchResponse } from "@/features/destination/types/destinations";
-import { fetchClient } from "@/shared/api/fetchClient";
+import {
+  fetchClient,
+  publicRequestOptions,
+} from "@/shared/api/fetchClient";
 import { parseApiError } from "@/shared/api/parseApiError";
 
 export type DestinationListResponse<T> = {
@@ -31,19 +34,20 @@ export async function fetchDestinations(
   if (query.take != null) queryString.append("take", String(query.take));
 
   const qs = queryString.toString();
-  const response = await fetchClient(`/destinations${qs ? `?${qs}` : ""}`, {
-    skipAuth: true,
-  });
+  const response = await fetchClient(
+    `/destinations${qs ? `?${qs}` : ""}`,
+    publicRequestOptions,
+  );
 
   await parseApiError(response);
   return response.json();
 }
 
 export async function fetchWeeklyPick(): Promise<DestinationCardResponse> {
-  const response = await fetchClient(`/destinations/weekly`, {
-    skipAuth: true,
-    withCredentials: false,
-  });
+  const response = await fetchClient(
+    "/destinations/weekly",
+    publicRequestOptions,
+  );
   await parseApiError(response);
   return response.json();
 }
@@ -51,10 +55,10 @@ export async function fetchWeeklyPick(): Promise<DestinationCardResponse> {
 export async function fetchRecommendedDestinations(): Promise<
   DestinationCardResponse[]
 > {
-  const response = await fetchClient(`/destinations/recommended`, {
-    skipAuth: true,
-    withCredentials: false,
-  });
+  const response = await fetchClient(
+    "/destinations/recommended",
+    publicRequestOptions,
+  );
   await parseApiError(response);
   return response.json();
 }
@@ -62,10 +66,10 @@ export async function fetchRecommendedDestinations(): Promise<
 export async function fetchDestinationDetail(
   region: string,
 ): Promise<DestinationDetailResponse> {
-  const response = await fetchClient(`/destinations/${region}`, {
-    skipAuth: true,
-    withCredentials: false,
-  });
+  const response = await fetchClient(
+    `/destinations/${encodeURIComponent(region)}`,
+    publicRequestOptions,
+  );
   await parseApiError(response);
   return response.json();
 }
@@ -73,10 +77,10 @@ export async function fetchDestinationDetail(
 export async function fetchDestinationMapData(): Promise<
   DestinationMapResponse[]
 > {
-  const response = await fetchClient(`/destinations/map`, {
-    skipAuth: true,
-    withCredentials: false,
-  });
+  const response = await fetchClient(
+    "/destinations/map",
+    publicRequestOptions,
+  );
   await parseApiError(response);
   return response.json();
 }
@@ -86,10 +90,7 @@ export async function searchDestinations(
 ): Promise<DestinationSearchResponse[]> {
   const response = await fetchClient(
     `/destinations/search?q=${encodeURIComponent(query)}`,
-    {
-      skipAuth: true,
-      withCredentials: false,
-    },
+    publicRequestOptions,
   );
   await parseApiError(response);
   return response.json();

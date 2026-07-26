@@ -17,6 +17,22 @@ type Props = {
 const INITIAL_CENTER = { lat: 35.5, lng: 127.5 };
 const INITIAL_LEVEL = 13;
 
+type Coordinates = {
+  lat: number;
+  lng: number;
+};
+
+function hasCoordinates<T extends { lat: number | null; lng: number | null }>(
+  value: T,
+): value is T & Coordinates {
+  return (
+    typeof value.lat === "number" &&
+    Number.isFinite(value.lat) &&
+    typeof value.lng === "number" &&
+    Number.isFinite(value.lng)
+  );
+}
+
 export default function TripRouteMapKakao({
   items,
   nearbySpots,
@@ -38,28 +54,17 @@ export default function TripRouteMapKakao({
 
   const sorted = useMemo(() => {
     return [...items]
-      .filter(
-        (i) =>
-          typeof i.lat === "number" &&
-          Number.isFinite(i.lat) &&
-          typeof i.lng === "number" &&
-          Number.isFinite(i.lng),
-      )
+      .filter(hasCoordinates)
       .sort((a, b) => a.order - b.order);
   }, [items]);
 
-  const points = useMemo(() => {
-    return sorted.map((i) => ({ lat: i.lat as number, lng: i.lng as number }));
-  }, [sorted]);
+  const points = useMemo(
+    () => sorted.map(({ lat, lng }) => ({ lat, lng })),
+    [sorted],
+  );
 
   const nearbyValid = useMemo(() => {
-    return (nearbySpots ?? []).filter(
-      (s) =>
-        typeof s.lat === "number" &&
-        Number.isFinite(s.lat) &&
-        typeof s.lng === "number" &&
-        Number.isFinite(s.lng),
-    );
+    return (nearbySpots ?? []).filter(hasCoordinates);
   }, [nearbySpots]);
 
   function cleanupRouteDrawings() {
@@ -127,7 +132,7 @@ export default function TripRouteMapKakao({
       if (nearbyValid.length) {
         const bounds = new maps.LatLngBounds();
         nearbyValid.forEach((s) =>
-          bounds.extend(new maps.LatLng(s.lat as number, s.lng as number)),
+          bounds.extend(new maps.LatLng(s.lat, s.lng)),
         );
         map.setBounds(bounds, 60, 60, 60, 60);
       } else {
@@ -163,7 +168,7 @@ export default function TripRouteMapKakao({
 
     // route markers + popups
     sorted.forEach((item) => {
-      const pos = new maps.LatLng(item.lat as number, item.lng as number);
+      const pos = new maps.LatLng(item.lat, item.lng);
 
       const markerContent = buildNumberBadgeHtml(item.order);
       const marker = new maps.CustomOverlay({
@@ -205,7 +210,7 @@ export default function TripRouteMapKakao({
         popupContent.querySelector<HTMLButtonElement>("[data-popup-close]");
       closeBtn?.addEventListener("click", () => popup.setMap(null));
     });
-  }, [ready, sorted, region]);
+  }, [ready, sorted, points, nearbyValid, region]);
 
   // nearbySpots 변경 시 nearby 마커만 다시 그리기 (버튼 토글 대응)
   useEffect(() => {
@@ -221,7 +226,7 @@ export default function TripRouteMapKakao({
     if (!nearbyValid.length) return;
 
     nearbyValid.forEach((spot) => {
-      const pos = new maps.LatLng(spot.lat as number, spot.lng as number);
+      const pos = new maps.LatLng(spot.lat, spot.lng);
 
       const markerContent = buildNearbyBadgeHtml(spot.category);
       const marker = new maps.CustomOverlay({
@@ -306,7 +311,7 @@ function buildNumberBadgeHtml(n: number) {
 
 function getIconString(Icon: typeof Coffee | typeof Martini | typeof Utensils) {
   return renderToString(<Icon size={14} strokeWidth={2.5} />);
-} 
+}
 
 function buildNearbyBadgeHtml(category: SpotCategory) {
   const root = document.createElement("div");
@@ -317,7 +322,7 @@ function buildNearbyBadgeHtml(category: SpotCategory) {
   let iconColor = "#111";
   const bgColor = "#fff";
 
- if (category === SpotCategory.FOOD) {
+  if (category === SpotCategory.FOOD) {
     iconHtml = getIconString(Utensils);
     iconColor = "#f97316";
   } else if (category === SpotCategory.CAFE) {
