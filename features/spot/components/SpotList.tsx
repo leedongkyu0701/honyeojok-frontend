@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import type { SpotCardResponse, SpotCategory } from "@/features/spot/types/spots";
+import type { SpotCategory } from "@/features/spot/types/spots";
 import { fetchSpotsByRegion } from "@/features/spot/api/spot.api";
 
 import Skeleton from "@/shared/ui/Skeleton";
@@ -69,7 +69,7 @@ export default function SpotList({
     );
   }
 
-  if (!(results?.data.length ?? 0)) {
+  if (!results || results.data.length === 0) {
     return (
       <EmptyState
         title="스팟이 없어요."
@@ -82,7 +82,7 @@ export default function SpotList({
     <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white">
         <OverlayLoader show={isFetching && isPlaceholderData} /> 
       <ul className="divide-y divide-neutral-100">
-        {results!.data.map((spot: SpotCardResponse) => (
+        {results.data.map((spot) => (
           <li key={spot.id} className="p-4">
             <SpotCard spot={spot} variant="list" />
           </li>

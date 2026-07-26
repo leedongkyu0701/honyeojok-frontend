@@ -51,13 +51,20 @@ export default function ReviewFields() {
       </p>
 
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-neutral-900">평점</label>
+        <p
+          id="post-rating-label"
+          className="block text-sm font-semibold text-neutral-900"
+        >
+          평점
+        </p>
         <Controller
           name="rating"
           control={control}
           render={({ field }) => (
             <StarRating
               value={field.value}
+              labelledBy="post-rating-label"
+              describedBy={errors.rating ? "post-rating-error" : undefined}
               onChange={(rating) => {
                 field.onChange(rating);
                 void trigger("rating");
@@ -66,7 +73,9 @@ export default function ReviewFields() {
           )}
         />
         {errors.rating ? (
-          <p className="text-xs text-red-600">{errors.rating.message}</p>
+          <p id="post-rating-error" className="text-xs text-red-600">
+            {errors.rating.message}
+          </p>
         ) : null}
         <p className="text-xs text-neutral-500">
           별을 클릭해서 1~5점으로 평가해주세요.

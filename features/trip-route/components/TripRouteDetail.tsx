@@ -387,7 +387,7 @@ export default function TripRouteDetail({
                   <div className="mt-4 space-y-3">
                     {activeDayEntity.items.map((item) => {
                       const hasTime = item.startTime || item.endTime;
-                      const hasSpotLink = item.spot?.id;
+                      const spotId = item.spot?.id;
 
                       return (
                         <div
@@ -420,9 +420,9 @@ export default function TripRouteDetail({
                                 {"⭐".repeat(Math.floor(item.recommendedLevel))}
                               </div>
 
-                              {hasSpotLink ? (
+                              {spotId ? (
                                 <Link
-                                  href={`/spots/${region}/${item.spot!.id}`}
+                                  href={`/spots/${region}/${spotId}`}
                                   className="ml-auto shrink-0"
                                 >
                                   <Button

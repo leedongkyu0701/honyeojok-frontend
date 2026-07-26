@@ -46,8 +46,14 @@ export default function RegionCombobox({ disabled }: { disabled: boolean }) {
 
   return (
     <div className="relative space-y-2">
-      <label className="block text-sm font-semibold text-neutral-900">지역 검색</label>
+      <label
+        htmlFor="post-region"
+        className="block text-sm font-semibold text-neutral-900"
+      >
+        지역 검색
+      </label>
       <input
+        id="post-region"
         type="text"
         disabled={disabled}
         value={query}
@@ -57,6 +63,10 @@ export default function RegionCombobox({ disabled }: { disabled: boolean }) {
         aria-controls={listboxId}
         aria-activedescendant={
           activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined
+        }
+        aria-invalid={Boolean(errors.regionSlug)}
+        aria-describedby={
+          errors.regionSlug ? "post-region-error" : undefined
         }
         onChange={(event) => {
           const nextQuery = event.target.value;
@@ -100,7 +110,9 @@ export default function RegionCombobox({ disabled }: { disabled: boolean }) {
       />
 
       {errors.regionSlug ? (
-        <p className="text-xs text-red-600">{errors.regionSlug.message}</p>
+        <p id="post-region-error" className="text-xs text-red-600">
+          {errors.regionSlug.message}
+        </p>
       ) : null}
 
       {canShowSuggestions ? (

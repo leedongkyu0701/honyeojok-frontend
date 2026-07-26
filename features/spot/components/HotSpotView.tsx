@@ -34,15 +34,18 @@ export default function HotSpotView() {
 
   const items = useMemo<SpotCardResponse[]>(() => {
     if (!data || category === null) return [];
-    return (data[category] ?? []) as SpotCardResponse[];
+    return data[category] ?? [];
   }, [data, category]);
 
   const sections = useMemo(() => {
     if (!data) return [];
-    return SPOT_CATEGORY_ITEMS.filter((x) => x.value !== null)
+    return SPOT_CATEGORY_ITEMS.filter(
+      (item): item is { label: string; value: SpotCategory } =>
+        item.value !== null,
+    )
       .map(({ value, label }) => {
-        const list = (data[value as SpotCategory] ?? []) as SpotCardResponse[];
-        return { key: value as SpotCategory, label, list };
+        const list = data[value] ?? [];
+        return { key: value, label, list };
       })
       .filter((s) => s.list.length > 0);
   }, [data]);

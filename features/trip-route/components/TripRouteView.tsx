@@ -53,7 +53,7 @@ export default function TripRouteView({ region }: { region: string }) {
 
         {!isLoading && !isError && (tripRoutes?.length ?? 0) > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {tripRoutes!.map((route) => (
+            {tripRoutes?.map((route) => (
               <RouteCard key={route.id} route={route} />
             ))}
           </div>

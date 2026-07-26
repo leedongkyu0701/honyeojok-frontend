@@ -33,8 +33,14 @@ export default function PostBasicFields({ children }: { children: ReactNode }) {
   return (
     <>
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-neutral-900">게시판</label>
+        <label
+          htmlFor="post-type"
+          className="block text-sm font-semibold text-neutral-900"
+        >
+          게시판
+        </label>
         <select
+          id="post-type"
           {...register("type")}
           onChange={(event) => handleTypeChange(event.target.value)}
           className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
@@ -57,27 +63,47 @@ export default function PostBasicFields({ children }: { children: ReactNode }) {
       {children}
 
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-neutral-900">제목</label>
+        <label
+          htmlFor="post-title"
+          className="block text-sm font-semibold text-neutral-900"
+        >
+          제목
+        </label>
         <input
+          id="post-title"
           type="text"
           {...register("title")}
           placeholder="제목을 입력하세요"
+          aria-invalid={Boolean(errors.title)}
+          aria-describedby={errors.title ? "post-title-error" : undefined}
           className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:border-neutral-400"
         />
         {errors.title ? (
-          <p className="text-xs text-red-600">{errors.title.message}</p>
+          <p id="post-title-error" className="text-xs text-red-600">
+            {errors.title.message}
+          </p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-neutral-900">내용</label>
+        <label
+          htmlFor="post-content"
+          className="block text-sm font-semibold text-neutral-900"
+        >
+          내용
+        </label>
         <textarea
+          id="post-content"
           {...register("content")}
           placeholder="내용을 입력하세요"
+          aria-invalid={Boolean(errors.content)}
+          aria-describedby={errors.content ? "post-content-error" : undefined}
           className="h-44 w-full resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
         />
         {errors.content ? (
-          <p className="text-xs text-red-600">{errors.content.message}</p>
+          <p id="post-content-error" className="text-xs text-red-600">
+            {errors.content.message}
+          </p>
         ) : null}
         <div className="flex justify-between text-xs text-neutral-500">
           <span>{content.length}자</span>

@@ -27,6 +27,7 @@ export default function CommentForm({
     <div className="space-y-2">
       <textarea
         value={value}
+        aria-label={placeholder}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className={`w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400 ${
