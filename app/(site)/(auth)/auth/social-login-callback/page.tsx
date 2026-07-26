@@ -5,30 +5,25 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { ErrorCode } from "@/shared/types/error-code";
 import { ApiError } from "@/shared/api/apiError";
-import { parseApiError } from "@/shared/api/parseApiError";
+import { refreshToken } from "@/features/auth/api/auth.api";
 import { toast } from "sonner";
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function SocialLoginCallback() {
   const router = useRouter();
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
 
   useEffect(() => {
-    (async () => {
+    let isMounted = true;
+
+    void (async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
-          method: "POST",
-          credentials: "include",
-        });
+        const data = await refreshToken();
 
-        await parseApiError(res);
-
-        const data = await res.json();
-
+        if (!isMounted) return;
         setAccessToken(data.accessToken);
         router.replace("/");
       } catch (error) {
+        if (!isMounted) return;
         if (error instanceof ApiError) {
           if (error.code === ErrorCode.OAUTH_FAILED) {
             toast.error("소셜 로그인에 실패했어요", {
@@ -39,6 +34,10 @@ export default function SocialLoginCallback() {
         router.replace("/auth/login");
       }
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [router, setAccessToken]);
 
   return (

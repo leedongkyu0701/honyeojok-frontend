@@ -1,4 +1,7 @@
-import { fetchClient } from "@/shared/api/fetchClient";
+import {
+  fetchClient,
+  publicRequestOptions,
+} from "@/shared/api/fetchClient";
 import { parseApiError } from "@/shared/api/parseApiError";
 import {
   likePostResponseSchema,
@@ -11,11 +14,6 @@ import {
   findPostsParamsSchema,
   type FindPostsParamsInput,
 } from "@/features/community/schemas/post-request.schema";
-
-const publicRequestOptions = {
-  skipAuth: true,
-  withCredentials: false,
-} as const;
 
 export async function fetchPosts(params: FindPostsParamsInput = {}) {
   const parsedParams = findPostsParamsSchema.parse(params);

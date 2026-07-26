@@ -102,6 +102,7 @@ export default function MyPage() {
 
   const logoutMutation = useMutation({
     mutationFn: logoutServer,
+    meta: { silent: true },
     onSettled: () => {
       logout();
       queryClient.clear();

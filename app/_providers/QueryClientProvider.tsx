@@ -192,11 +192,7 @@ export default function QCProvider({ children }: { children: ReactNode }) {
         }),
         mutationCache: new MutationCache({
           onError: (error, _variables, _context, mutation) => {
-            // mutation meta로 전역 토스트 억제 가능
-            const meta = mutation.options.meta as
-              | { silent?: boolean }
-              | undefined;
-            if (meta?.silent) return; // 조용히 실패 처리할경우 ex) 폼 검증 에러를 페이지 내부에서 처리할 때, 로그아웃 시도할 때 등
+            if (mutation.options.meta?.silent) return;
             handleMutationError(error);
           },
         }),
@@ -209,9 +205,7 @@ export default function QCProvider({ children }: { children: ReactNode }) {
             retry: (failureCount, err) => {
               if (err instanceof ApiError) {
                 if (isAuthCode(err.code)) return false;
-                if (err.code === ErrorCode.RESOURCE_NOT_FOUND) return false;
-                if (err.code === ErrorCode.RATE_LIMITED) return false;
-                if (err.code === ErrorCode.BAD_REQUEST) return false;
+                if (err.status >= 400 && err.status < 500) return false;
               }
               return failureCount < 1;
             },

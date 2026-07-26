@@ -2,7 +2,10 @@ import type {
   TripRouteCardResponse,
   TripRouteDetailResponse,
 } from "@/features/trip-route/types/trip-routes";
-import { fetchClient } from "@/shared/api/fetchClient";
+import {
+  fetchClient,
+  publicRequestOptions,
+} from "@/shared/api/fetchClient";
 import { parseApiError } from "@/shared/api/parseApiError";
 import { SpotCategory } from "@/features/spot/types/spots";
 import { SpotMapResponse } from "@/features/spot/types/spots";
@@ -21,10 +24,7 @@ export async function fetchTripRoutesByRegion(
 ): Promise<TripRouteCardResponse[]> {
   const response = await fetchClient(
     `/trip-routes/region/${encodeURIComponent(region)}`,
-    {
-      skipAuth: true,
-      withCredentials: false,
-    },
+    publicRequestOptions,
   );
   await parseApiError(response);
   return response.json();
@@ -42,10 +42,7 @@ export async function fetchTripRouteDetail(
 }
 
 export async function fetchHotRoutes(): Promise<TripRouteCardResponse[]> {
-  const response = await fetchClient(`/trip-routes/hot`, {
-    skipAuth: true,
-    withCredentials: false,
-  });
+  const response = await fetchClient("/trip-routes/hot", publicRequestOptions);
   await parseApiError(response);
   return response.json();
 }
@@ -103,10 +100,8 @@ export async function fetchNearbyTripRoutes(
   const response = await fetchClient(
     `/trip-routes/nearby-spots/${encodeURIComponent(routeSlug)}${
       queryString ? `?${queryString}` : ""
-    }`,{
-      skipAuth: true,
-      withCredentials: false,
-    }
+    }`,
+    publicRequestOptions,
   );
   await parseApiError(response);
   return response.json();

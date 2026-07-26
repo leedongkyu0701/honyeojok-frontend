@@ -1,4 +1,5 @@
 "use client";
+import * as Sentry from "@sentry/nextjs";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { ReactNode, useEffect } from "react";
 import { refreshToken } from "@/features/auth/api/auth.api";
@@ -15,27 +16,35 @@ export default function AuthProvider({
   const setAuthInitialized = useAuthStore((s) => s.setAuthInitialized);
 
   useEffect(() => {
+    let isMounted = true;
+
     const initializeAuth = async () => {
       try {
         const data = await refreshToken();
-        setAccessToken(data.accessToken);
+        if (isMounted) setAccessToken(data.accessToken);
       } catch (error) {
-        if (error instanceof ApiError) {
-          if (
-            error.code === ErrorCode.AUTH_REFRESH_INVALID ||
-            error.code === ErrorCode.AUTH_UNAUTHORIZED
-          ) {
-            logout();
-            return;
-          }
+        const isSignedOut =
+          error instanceof ApiError &&
+          (error.code === ErrorCode.AUTH_REFRESH_INVALID ||
+            error.code === ErrorCode.AUTH_UNAUTHORIZED);
+
+        if (!isSignedOut && error instanceof ApiError && error.status >= 500) {
+          Sentry.captureException(error, {
+            tags: { source: "auth-initialization" },
+          });
         }
-      }
-      finally {
-        setAuthInitialized(true);
+
+        if (isMounted) logout();
+      } finally {
+        if (isMounted) setAuthInitialized(true);
       }
     };
 
-    initializeAuth();
+    void initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, [setAccessToken, logout, setAuthInitialized]);
 
   return <>{children}</>;

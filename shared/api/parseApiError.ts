@@ -1,4 +1,30 @@
 import { ApiError, type ApiErrorBody } from "./apiError";
+import { ErrorCode } from "@/shared/types/error-code";
+
+function isErrorCode(value: unknown): value is ErrorCode {
+  return Object.values(ErrorCode).some((code) => code === value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
+}
+
+function isApiErrorBody(value: unknown): value is ApiErrorBody {
+  if (!isRecord(value)) return false;
+  if (
+    value.ok !== false ||
+    !isErrorCode(value.code) ||
+    typeof value.message !== "string"
+  ) {
+    return false;
+  }
+
+  return (
+    !("requestId" in value) ||
+    value.requestId === undefined ||
+    typeof value.requestId === "string"
+  );
+}
 
 export async function parseApiError(response: Response): Promise<void> {
   if (response.ok) {
@@ -12,13 +38,8 @@ export async function parseApiError(response: Response): Promise<void> {
     // ignore
   }
 
-  if (
-    body &&
-    typeof body === "object" &&
-    "ok" in body &&
-    body.ok === false
-  ) {
-    const apiErrorBody = body as ApiErrorBody;
+  if (isApiErrorBody(body)) {
+    const apiErrorBody = body;
     throw new ApiError(
       response.status,
       apiErrorBody.message,
@@ -26,7 +47,7 @@ export async function parseApiError(response: Response): Promise<void> {
       apiErrorBody.details,
       apiErrorBody.requestId,
     );
-  } else {
-    throw new ApiError(response.status, response.statusText || "Request failed"); // body가 ApiErrorBody 형태가 아니면 statusText를 메시지로 사용
   }
+
+  throw new ApiError(response.status, response.statusText || "Request failed");
 }
