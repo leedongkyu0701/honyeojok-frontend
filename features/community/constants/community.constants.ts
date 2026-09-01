@@ -48,6 +48,7 @@ export const MAX_POST_IMAGE_COUNT = 5;
 export const MAX_POST_IMAGE_SIZE_MB = 6;
 export const MAX_POST_IMAGE_SIZE_BYTES =
   MAX_POST_IMAGE_SIZE_MB * 1024 * 1024;
+export const MAX_POST_IMAGE_CAPTION_LENGTH = 500;
 export const POST_IMAGE_MIME_TYPES = [
   "image/jpeg",
   "image/png",

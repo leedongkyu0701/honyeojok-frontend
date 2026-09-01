@@ -50,6 +50,11 @@ export function usePostImages() {
       return;
     }
 
+    if (incomingFiles.some((file) => file.size <= 0)) {
+      setErrorMessage("비어있는 이미지 파일은 업로드할 수 없습니다.");
+      return;
+    }
+
     if (incomingFiles.some((file) => file.size > MAX_POST_IMAGE_SIZE_BYTES)) {
       setErrorMessage(
         `이미지 하나당 최대 용량은 ${MAX_POST_IMAGE_SIZE_MB}MB입니다.`,

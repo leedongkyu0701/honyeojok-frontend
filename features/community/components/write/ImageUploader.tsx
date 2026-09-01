@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRef } from "react";
 import {
+  MAX_POST_IMAGE_CAPTION_LENGTH,
   MAX_POST_IMAGE_COUNT,
   POST_IMAGE_ACCEPT,
 } from "@/features/community/constants/community.constants";
@@ -14,6 +15,7 @@ type ImageUploaderProps = {
   onAddImages: (files: FileList | null) => void;
   onRemoveImage: (imageId: string) => void;
   onUpdateCaption: (imageId: string, caption: string) => void;
+  disabled?: boolean;
 };
 
 export default function ImageUploader({
@@ -21,6 +23,7 @@ export default function ImageUploader({
   onAddImages,
   onRemoveImage,
   onUpdateCaption,
+  disabled = false,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const remainingSlots = MAX_POST_IMAGE_COUNT - images.length;
@@ -32,6 +35,7 @@ export default function ImageUploader({
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {
           event.preventDefault();
+          if (disabled) return;
           onAddImages(event.dataTransfer.files);
         }}
       >
@@ -55,7 +59,7 @@ export default function ImageUploader({
               size="sm"
               className="px-4"
               onClick={() => inputRef.current?.click()}
-              disabled={remainingSlots <= 0}
+              disabled={disabled || remainingSlots <= 0}
             >
               파일 선택
             </Button>
@@ -72,8 +76,10 @@ export default function ImageUploader({
           type="file"
           accept={POST_IMAGE_ACCEPT}
           multiple
+          disabled={disabled}
           className="hidden"
           onChange={(event) => {
+            if (disabled) return;
             onAddImages(event.target.files);
             event.currentTarget.value = "";
           }}
@@ -98,6 +104,7 @@ export default function ImageUploader({
                 <button
                   type="button"
                   onClick={() => onRemoveImage(image.id)}
+                  disabled={disabled}
                   className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-base text-white hover:bg-black"
                   aria-label="사진 삭제"
                 >
@@ -115,6 +122,8 @@ export default function ImageUploader({
                 <input
                   type="text"
                   value={image.caption}
+                  maxLength={MAX_POST_IMAGE_CAPTION_LENGTH}
+                  disabled={disabled}
                   onChange={(event) =>
                     onUpdateCaption(image.id, event.target.value)
                   }

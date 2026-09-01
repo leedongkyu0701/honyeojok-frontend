@@ -6,9 +6,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { createPost } from "@/features/community/api/post.api";
+import { createUploadSessions } from "@/features/community/api/upload.api";
 import { MAX_POST_IMAGE_COUNT, MAX_POST_IMAGE_SIZE_MB } from "@/features/community/constants/community.constants";
-import { usePostImages } from "@/features/community/hooks/usePostImages";
-import { buildCreatePostFormData } from "@/features/community/lib/buildCreatePostFormData";
+import {
+  usePostImages,
+  type PostImageDraft,
+} from "@/features/community/hooks/usePostImages";
+import { buildCreatePostPayload } from "@/features/community/lib/buildCreatePostPayload";
+import {
+  getPostImageUploadErrorMessage,
+  PostImageUploadError,
+  uploadFilesToPresignedUrls,
+  waitForUploadsReady,
+} from "@/features/community/lib/post-image-upload";
 import { communityKeys } from "@/features/community/queries/community.keys";
 import {
   writePostSchema,
@@ -22,6 +32,26 @@ import Container from "@/shared/ui/Container";
 import ImageUploader from "./ImageUploader";
 import PostBasicFields from "./PostBasicFields";
 import ReviewFields from "./ReviewFields";
+
+type SubmissionPhase =
+  | "idle"
+  | "preparing"
+  | "uploading"
+  | "processing"
+  | "creating";
+
+type CreatePostMutationInput = {
+  values: WritePostFormValues;
+  images: PostImageDraft[];
+};
+
+const submissionPhaseLabels: Record<SubmissionPhase, string> = {
+  idle: "작성",
+  preparing: "업로드 준비 중...",
+  uploading: "이미지 업로드 중...",
+  processing: "이미지 처리 중...",
+  creating: "게시글 저장 중...",
+};
 
 export default function WritePost() {
   const router = useRouter();
@@ -40,9 +70,31 @@ export default function WritePost() {
   });
   const type = useWatch({ control: form.control, name: "type" });
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [submissionPhase, setSubmissionPhase] =
+    useState<SubmissionPhase>("idle");
 
   const createPostMutation = useMutation({
-    mutationFn: createPost,
+    mutationFn: async ({ values, images }: CreatePostMutationInput) => {
+      if (images.length === 0) {
+        setSubmissionPhase("creating");
+        return createPost(buildCreatePostPayload(values));
+      }
+
+      setSubmissionPhase("preparing");
+      const { uploads: sessions } = await createUploadSessions(
+        images.map((image) => image.file),
+      );
+
+      setSubmissionPhase("uploading");
+      await uploadFilesToPresignedUrls(images, sessions);
+
+      const uploadIds = sessions.map((session) => session.uploadId);
+      setSubmissionPhase("processing");
+      await waitForUploadsReady(uploadIds);
+
+      setSubmissionPhase("creating");
+      return createPost(buildCreatePostPayload(values, images, uploadIds));
+    },
     meta: { silent: true },
     onSuccess: (post) => {
       void queryClient.invalidateQueries({
@@ -51,6 +103,11 @@ export default function WritePost() {
       router.push(`/community/${post.id}`);
     },
     onError: (error) => {
+      if (error instanceof PostImageUploadError) {
+        setSubmissionError(getPostImageUploadErrorMessage(error));
+        return;
+      }
+
       if (!(error instanceof ApiError)) {
         setSubmissionError("알 수 없는 오류로 글 작성에 실패했어요.");
         return;
@@ -76,15 +133,43 @@ export default function WritePost() {
         setSubmissionError("지원하지 않는 이미지 형식입니다.");
         return;
       }
+      if (error.code === ErrorCode.UPLOAD_NOT_FOUND) {
+        setSubmissionError(
+          "업로드 정보가 만료되었거나 존재하지 않습니다. 다시 시도해주세요.",
+        );
+        return;
+      }
+      if (error.code === ErrorCode.UPLOAD_NOT_READY) {
+        setSubmissionError(
+          "이미지 처리가 아직 완료되지 않았습니다. 다시 시도해주세요.",
+        );
+        return;
+      }
+      if (error.code === ErrorCode.UPLOAD_PROCESSING_FAILED) {
+        setSubmissionError("이미지 처리에 실패했습니다.");
+        return;
+      }
+      if (error.code === ErrorCode.UPLOAD_ALREADY_ATTACHED) {
+        setSubmissionError("이미 사용된 이미지입니다. 다시 업로드해주세요.");
+        return;
+      }
       setSubmissionError("글 작성에 실패했어요.");
     },
+    onSettled: () => setSubmissionPhase("idle"),
   });
 
   const onSubmit = (values: WritePostFormValues) => {
+    if (createPostMutation.isPending) return;
+
     setSubmissionError(null);
     imageDrafts.clearError();
-    createPostMutation.mutate(buildCreatePostFormData(values, imageDrafts.images));
+    createPostMutation.mutate({
+      values: { ...values },
+      images: imageDrafts.images.map((image) => ({ ...image })),
+    });
   };
+
+  const isSubmitting = createPostMutation.isPending;
 
   const errorMessages = [imageDrafts.errorMessage, submissionError].filter(
     (message): message is string => message !== null,
@@ -120,15 +205,21 @@ export default function WritePost() {
 
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <PostBasicFields>
-                <ImageUploader
-                  images={imageDrafts.images}
-                  onAddImages={imageDrafts.addImages}
-                  onRemoveImage={imageDrafts.removeImage}
-                  onUpdateCaption={imageDrafts.updateCaption}
-                />
-              </PostBasicFields>
-              {type === "REVIEW" ? <ReviewFields /> : null}
+              <fieldset
+                disabled={isSubmitting}
+                className="space-y-5 border-0 p-0"
+              >
+                <PostBasicFields>
+                  <ImageUploader
+                    images={imageDrafts.images}
+                    onAddImages={imageDrafts.addImages}
+                    onRemoveImage={imageDrafts.removeImage}
+                    onUpdateCaption={imageDrafts.updateCaption}
+                    disabled={isSubmitting}
+                  />
+                </PostBasicFields>
+                {type === "REVIEW" ? <ReviewFields /> : null}
+              </fieldset>
 
               <div className="flex items-center justify-end gap-2">
                 <Button
@@ -137,12 +228,12 @@ export default function WritePost() {
                   size="sm"
                   className="px-3"
                   onClick={() => router.back()}
-                  disabled={createPostMutation.isPending}
+                  disabled={isSubmitting}
                 >
                   취소
                 </Button>
-                <Button type="submit" disabled={createPostMutation.isPending}>
-                  {createPostMutation.isPending ? "업로드 중..." : "작성"}
+                <Button type="submit" disabled={isSubmitting}>
+                  {submissionPhaseLabels[submissionPhase]}
                 </Button>
               </div>
             </form>

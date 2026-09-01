@@ -11,7 +11,9 @@ import {
   postListSchema,
 } from "@/features/community/schemas/post.schema";
 import {
+  createPostRequestSchema,
   findPostsParamsSchema,
+  type CreatePostRequest,
   type FindPostsParamsInput,
 } from "@/features/community/schemas/post-request.schema";
 
@@ -64,10 +66,12 @@ export async function incrementPostViewCount(postId: number): Promise<void> {
   await parseApiError(response);
 }
 
-export async function createPost(formData: FormData) {
+export async function createPost(payload: CreatePostRequest) {
+  const parsedPayload = createPostRequestSchema.parse(payload);
   const response = await fetchClient("/posts", {
     method: "POST",
-    body: formData,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(parsedPayload),
   });
   await parseApiError(response);
   return postCardSchema.parse(await response.json());
