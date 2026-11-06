@@ -20,6 +20,8 @@ export default function BestRouteSection() {
     data: routes = [],
     isLoading,
     isError,
+    isFetching,
+    refetch,
   } = useQuery<TripRouteCardResponse[]>({
     queryKey: ["trip-routes", "hot"],
     queryFn: fetchHotRoutes,
@@ -34,7 +36,7 @@ export default function BestRouteSection() {
           <Skeleton className="h-80 rounded-2xl" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 lg:contents">
+        <div className="grid gap-4 sm:grid-cols-2 lg:contents">
           {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             <div key={index} className="lg:col-span-3">
               <Skeleton className="h-36 rounded-2xl" />
@@ -48,6 +50,9 @@ export default function BestRouteSection() {
       <EmptyState
         title="여행 루트를 불러오지 못했어요."
         description="잠시 후 다시 시도해주세요."
+        actionLabel={isFetching ? "다시 불러오는 중…" : "다시 시도"}
+        onAction={() => void refetch({ cancelRefetch: false })}
+        actionDisabled={isFetching}
       />
     );
   } else if (routes.length === 0) {
@@ -67,7 +72,7 @@ export default function BestRouteSection() {
           <RouteCard route={featured} variant="featured" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 lg:contents">
+        <div className="grid gap-4 sm:grid-cols-2 lg:contents">
           {list.map((route) => (
             <div key={route.id} className="lg:col-span-3">
               <RouteCard route={route} variant="default" />
@@ -79,7 +84,7 @@ export default function BestRouteSection() {
   }
 
   return (
-    <section className="bg-neutral-50 py-12">
+    <section className="bg-neutral-50 py-10 sm:py-12">
       <Container className="space-y-6">
         <SectionHeader
           title="인기 여행 루트"

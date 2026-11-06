@@ -80,17 +80,17 @@ export default function HorizontalRail({
 
     element.scrollTo({
       left: element.scrollLeft + step * dir,
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     });
   };
 
   return (
-    <div className={cn("flex items-center gap-3", className)}>
+    <div className={cn("flex min-w-0 items-center gap-3", className)}>
       <Button
         variant="ghost"
         size="sm"
         onClick={() => scrollByOne(-1)}
-        aria-label="Previous"
+        aria-label="이전 항목"
         className={cn(
           "hidden sm:inline-flex shrink-0 transition",
           canPrev
@@ -106,7 +106,7 @@ export default function HorizontalRail({
       <div
         ref={railRef}
         className={cn(
-          "flex flex-1 gap-4 overflow-x-auto scroll-smooth",
+          "flex min-w-0 flex-1 gap-4 overflow-x-auto scroll-smooth motion-reduce:scroll-auto",
           "snap-x snap-proximity",
           "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
           // 보통 브라우저 별로 스크롤바가 다르게 표시되는데, 이걸 통일시키기 위해 위와 같이 작성함(모든 브라우저에서 스크롤바를 숨김)
@@ -127,7 +127,7 @@ export default function HorizontalRail({
         variant="ghost"
         size="sm"
         onClick={() => scrollByOne(1)}
-        aria-label="Next"
+        aria-label="다음 항목"
         className={cn(
           "hidden sm:inline-flex shrink-0 transition",
           canNext

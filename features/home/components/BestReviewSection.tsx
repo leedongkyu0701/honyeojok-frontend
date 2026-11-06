@@ -1,14 +1,13 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 
 import Container from "@/shared/ui/Container";
 import SectionHeader from "@/shared/ui/SectionHeader";
 import Skeleton from "@/shared/ui/Skeleton";
 import EmptyState from "@/shared/ui/EmptyState";
-import Button from "@/shared/ui/Button";
+import LinkButton from "@/shared/ui/LinkButton";
 
 import PostCard from "@/features/community/components/common/PostCard";
 import { bestPostsQueryOptions } from "@/features/community/queries/post.queries";
@@ -21,6 +20,8 @@ export default function BestReviewSection() {
     data: posts = [],
     isLoading,
     isError,
+    isFetching,
+    refetch,
   } = useQuery(bestPostsQueryOptions());
 
   let content: ReactNode;
@@ -38,6 +39,9 @@ export default function BestReviewSection() {
       <EmptyState
         title="베스트 글을 불러오지 못했어요."
         description="잠시 후 다시 시도해주세요."
+        actionLabel={isFetching ? "다시 불러오는 중…" : "다시 시도"}
+        onAction={() => void refetch({ cancelRefetch: false })}
+        actionDisabled={isFetching}
       />
     );
   } else if (posts.length === 0) {
@@ -58,17 +62,15 @@ export default function BestReviewSection() {
   }
 
   return (
-    <section className="py-12">
+    <section className="bg-white py-10 sm:py-12">
       <Container className="space-y-6">
         <SectionHeader
           title="이번 달 인기 글"
           description="혼여족들이 많이 본 글을 모아봤어요."
           action={
-            <Link href="/community">
-              <Button variant="ghost" size="sm">
-                커뮤니티 바로가기 →
-              </Button>
-            </Link>
+            <LinkButton href="/community" variant="ghost" size="sm" className="min-h-11">
+              커뮤니티 바로가기 →
+            </LinkButton>
           }
         />
 

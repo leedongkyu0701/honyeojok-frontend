@@ -26,26 +26,36 @@ const sizeClasses: Record<Size, string> = {
   lg: "px-5 py-3 text-base",
 };
 
+export type ButtonStyleProps = {
+  className?: string;
+  variant?: Variant;
+  size?: Size;
+};
+
+export function buttonStyles({
+  className,
+  variant = "primary",
+  size = "md",
+}: ButtonStyleProps = {}) {
+  return cn(
+    "inline-flex items-center justify-center gap-2 rounded-full font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60",
+    variantClasses[variant],
+    sizeClasses[size],
+    className,
+  );
+}
+
 export default function Button({
   className,
   variant = "primary",
   size = "md",
   type = "button",
   ...props
-}: ComponentPropsWithoutRef<"button"> & {
-  variant?: Variant;
-  size?: Size;
-  type?: "button" | "submit" | "reset";
-}) {
+}: ComponentPropsWithoutRef<"button"> & ButtonStyleProps) {
   return (
     <button
       type={type}
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60",
-        variantClasses[variant],
-        sizeClasses[size],
-        className,
-      )}
+      className={buttonStyles({ variant, size, className })}
       {...props}
     />
   );

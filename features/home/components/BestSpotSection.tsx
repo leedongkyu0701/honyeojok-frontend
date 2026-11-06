@@ -10,8 +10,7 @@ import EmptyState from "@/shared/ui/EmptyState";
 import type { SpotCardResponse } from "@/features/spot/types/spots";
 import { fetchRecommendedSpots } from "@/features/spot/api/spot.api";
 import SpotCard from "@/features/spot/components/SpotCard";
-import Link from "next/link";
-import Button from "@/shared/ui/Button";
+import LinkButton from "@/shared/ui/LinkButton";
 import HorizontalRail from "@/shared/ui/HorizontalRail";
 
 function shuffle<T>(arr: T[], n: number) {
@@ -30,6 +29,8 @@ export default function BestSpotSection() {
     data: spots,
     isLoading,
     isError,
+    isFetching,
+    refetch,
   } = useQuery<SpotCardResponse[]>({
     queryKey: ["spots", "recommended"],
     queryFn: fetchRecommendedSpots,
@@ -41,23 +42,21 @@ export default function BestSpotSection() {
   }, [spots]);
 
   return (
-    <section className="py-12 ">
+    <section className="bg-white py-10 sm:py-12">
       <Container className="space-y-6">
         <SectionHeader
           title="추천 스팟"
           description="혼자 가기 좋은 인기있는 장소를 모아봤어요."
           action={
-            <Link href="/spots">
-              <Button variant="ghost" size="sm">
-                스팟 전체보기 →
-              </Button>
-            </Link>
+            <LinkButton href="/spots" variant="ghost" size="sm" className="min-h-11">
+              스팟 전체보기 →
+            </LinkButton>
           }
         />
 
         {isLoading ? (
           <HorizontalRail
-            itemClassName="w-[44%] sm:w-[48.5%] md:w-[32%] lg:w-[23.5%]"
+            itemClassName="w-[80%] sm:w-[48.5%] md:w-[32%] lg:w-[23.5%]"
           >
             {Array.from({ length: 4 }).map((_, index) => (
               <Skeleton key={index} className="h-48 w-full rounded-2xl" />
@@ -69,6 +68,9 @@ export default function BestSpotSection() {
           <EmptyState
             title="스팟을 불러오지 못했어요."
             description="잠시 후 다시 시도해주세요."
+            actionLabel={isFetching ? "다시 불러오는 중…" : "다시 시도"}
+            onAction={() => void refetch({ cancelRefetch: false })}
+            actionDisabled={isFetching}
           />
         ) : null}
 
@@ -81,7 +83,7 @@ export default function BestSpotSection() {
 
         {!isLoading && !isError && pickedSpots.length > 0 ? (
           <HorizontalRail
-            itemClassName="w-[44%] sm:w-[48.5%] md:w-[32%] lg:w-[23.5%]"
+            itemClassName="w-[80%] sm:w-[48.5%] md:w-[32%] lg:w-[23.5%]"
           >
             {pickedSpots.map((spot) => (
               <SpotCard key={spot.id} spot={spot} />

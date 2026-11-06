@@ -102,35 +102,36 @@ export default function SpotCard({
   // - 폭은 부모(HorizontalRail itemClassName)가 결정 그래서 여기서는 "부모 폭을 꽉 채우는 카드"로 둔다
   
   return (
-    <Link href={href} className="group block">
-      <Card className="overflow-hidden rounded-2xl transition duration-300 group-hover:-translate-y-1 group-hover:shadow-md">
+    <Link href={href} className="group block h-full rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-900">
+      <Card className="h-full overflow-hidden rounded-2xl shadow-none transition duration-300 group-hover:shadow-md motion-reduce:transition-none">
         <div className="relative h-36 sm:h-44 bg-neutral-100">
           <Image
             src={imageSrc}
             alt={spot.name}
             fill
-            className="object-cover transition duration-500 group-hover:scale-[1.03]"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 40vw, 24vw"
+            className="object-cover transition duration-500 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
+            sizes="(max-width: 640px) 80vw, (max-width: 768px) 45vw, (max-width: 1024px) 30vw, 260px"
           />
         </div>
 
-        <CardContent className="space-y-1.5 p-3 sm:space-y-2 sm:p-4">
+        <CardContent className="space-y-2 p-4">
+          <p className="truncate text-sm text-neutral-600">{spot.destination.name}</p>
           <div className="flex items-start justify-between gap-3">
-            <h3 className="line-clamp-1 text-sm sm:text-base font-semibold">
+            <h3 className="line-clamp-2 min-h-12 text-base font-semibold leading-6 text-neutral-900">
               {spot.name}
             </h3>
           </div>
 
-          <p className="line-clamp-1 text-xs sm:text-sm text-neutral-500">
+          <p className="line-clamp-2 min-h-12 text-sm leading-6 text-neutral-600">
             {spot.summary}
           </p>
 
           {spot.tags.length ? (
-            <div className="flex gap-1 max-h-5 overflow-hidden">
+            <div className="flex flex-wrap gap-1">
               {spot.tags.slice(0, 2).map((t) => (
                 <span
                   key={t.slug}
-                  className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-600"
+                  className="max-w-full truncate rounded-full bg-neutral-100 px-2 py-1 text-xs text-neutral-600"
                 >
                   #{t.label}
                 </span>

@@ -43,7 +43,7 @@ export default function RouteCard({
 
           <h3
             className={cn(
-              "font-semibold leading-snug line-clamp-1",
+              "font-semibold leading-snug line-clamp-2",
               isFeatured ? "text-lg" : "text-base",
             )}
           >
@@ -51,8 +51,7 @@ export default function RouteCard({
           </h3>
           <p
             className={cn(
-              "mt-2 text-sm text-neutral-600",
-              isFeatured ? "line-clamp-2" : "line-clamp-1",
+              "mt-2 line-clamp-2 text-sm leading-6 text-neutral-600",
             )}
           >
             {route.summary}
